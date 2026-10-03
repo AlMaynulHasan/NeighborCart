@@ -1,0 +1,37 @@
+name: neighbor_cart
+description: "NeighborCart - Shop Together. Save Together."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Firebase — added ahead of `flutterfire configure`. Safe to sit unused
+  # until lib/firebase_options.dart exists and main.dart calls
+  # Firebase.initializeApp(); nothing imports these yet.
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.4
+  google_sign_in: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  # NOTE: No custom image/icon assets are declared yet because Phase 1 uses
+  # placeholder containers for product/profile images (see chat notes on
+  # missing assets). Uncomment and add real files once assets are provided:
+  #
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
