@@ -127,7 +127,7 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
           const SizedBox(height: 12),
           Expanded(
             child: products.isEmpty
-                ? const Center(child: const Text('No products found', style: AppTextStyles.bodySecondary))
+                ? Center(child: Text('No products found', style: AppTextStyles.bodySecondary))
                 : ListView.builder(
                     itemCount: products.length,
                     itemBuilder: (context, index) {
