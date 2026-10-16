@@ -5,6 +5,7 @@ import '../../core/constants/auth_mode.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/auth_mode_toggle.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -53,24 +54,35 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
-    // PHASE 1: simulate a brief loading state; replace with
-    // AuthService.signIn(...) once Firebase Authentication is wired up.
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    if (_isWholesaler) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const WholesalerDashboardScreen()),
+    try {
+      await AuthService.instance.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        expectedRole: _mode,
       );
-    } else {
-      Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+      if (!mounted) return;
+      if (_isWholesaler) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const WholesalerDashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.friendlyError(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   void _handleGoogleSignIn() {
-    // PHASE 1 placeholder — wire to Firebase Authentication's Google
-    // provider later. Not offered in Wholesaler mode (business accounts
-    // typically don't use consumer Google sign-in).
+    // Still a placeholder — real Google Sign-In needs an OAuth client ID
+    // configured in Google Cloud + a <meta> tag in web/index.html for
+    // Flutter Web specifically. Email/Password is fully wired to Firebase
+    // now; Google is the next piece once that extra setup is done.
     Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
   }
 
@@ -153,8 +165,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (!_isWholesaler) ...[
                   const SizedBox(height: 24),
-                  const Row(
-                    children: [
+                  Row(
+                    children: const [
                       Expanded(child: Divider()),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
