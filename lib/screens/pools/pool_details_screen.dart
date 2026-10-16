@@ -42,7 +42,7 @@ class PoolDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('COLLECTIVE VALUE', style: AppTextStyles.caption),
+                          Text('COLLECTIVE VALUE', style: AppTextStyles.caption),
                           const SizedBox(height: 6),
                           Text('৳${pool.collectiveValue.toStringAsFixed(0)}',
                               style: AppTextStyles.body.copyWith(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary)),
@@ -55,7 +55,7 @@ class PoolDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('ACTIVE NEIGHBORS', style: AppTextStyles.caption),
+                          Text('ACTIVE NEIGHBORS', style: AppTextStyles.caption),
                           const SizedBox(height: 6),
                           Text('${pool.memberCount} Joined',
                               style: AppTextStyles.body.copyWith(fontSize: 18, fontWeight: FontWeight.w800)),
@@ -85,7 +85,7 @@ class PoolDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Pool Coordinator', style: AppTextStyles.caption),
+                          Text('Pool Coordinator', style: AppTextStyles.caption),
                           const SizedBox(height: 2),
                           Text(pool.coordinatorName, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
                         ],
@@ -114,7 +114,7 @@ class PoolDetailsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Tier Unlocks', style: AppTextStyles.title),
+                    Text('Tier Unlocks', style: AppTextStyles.title),
                     const SizedBox(height: 8),
                     for (final tier in pool.tiers)
                       TierRow(
@@ -156,7 +156,7 @@ class PoolDetailsScreen extends StatelessWidget {
                       children: [
                         Text('Order Deadline',
                             style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: AppColors.warning)),
-                        const Text(MockDataService.orderDeadlineLabel, style: AppTextStyles.bodySecondary),
+                        Text(MockDataService.orderDeadlineLabel, style: AppTextStyles.bodySecondary),
                       ],
                     ),
                   ),
