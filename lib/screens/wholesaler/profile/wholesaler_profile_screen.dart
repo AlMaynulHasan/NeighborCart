@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/wholesaler_mock_data_service.dart';
+import '../../auth/login_screen.dart';
 
 /// Simple wholesaler account screen — same option-list pattern as the
 /// customer ProfileScreen, kept separate as its own widget per the
@@ -19,7 +21,7 @@ class WholesalerProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const wholesaler = WholesalerMockDataService.currentWholesaler;
+    final wholesaler = WholesalerMockDataService.currentWholesaler;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -42,7 +44,14 @@ class WholesalerProfileScreen extends StatelessWidget {
             icon: Icons.logout_rounded,
             label: 'Log Out',
             isDestructive: true,
-            onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onTap: () async {
+              await AuthService.instance.signOut();
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
       ),
