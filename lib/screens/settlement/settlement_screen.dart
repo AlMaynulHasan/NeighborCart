@@ -10,7 +10,7 @@ class SettlementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const order = MockDataService.settlementOrder;
+    final order = MockDataService.settlementOrder;
     final progress = order.membersPaid / order.membersTotal;
 
     return Scaffold(
@@ -40,7 +40,7 @@ class SettlementScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('TOTAL POOL ORDER', style: AppTextStyles.caption),
+                              Text('TOTAL POOL ORDER', style: AppTextStyles.caption),
                               const SizedBox(height: 6),
                               Text('৳${order.totalAmount.toStringAsFixed(0)}',
                                   style: AppTextStyles.body.copyWith(fontSize: 20, fontWeight: FontWeight.w800)),
@@ -64,7 +64,7 @@ class SettlementScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Neighbor payment progress', style: AppTextStyles.bodySecondary),
+                        Text('Neighbor payment progress', style: AppTextStyles.bodySecondary),
                         Text('${order.membersPaid} of ${order.membersTotal} paid',
                             style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
                       ],
@@ -83,7 +83,7 @@ class SettlementScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 22),
-              const Text('Member Breakdown', style: AppTextStyles.title),
+              Text('Member Breakdown', style: AppTextStyles.title),
               const SizedBox(height: 12),
               Expanded(
                 child: ListView(
