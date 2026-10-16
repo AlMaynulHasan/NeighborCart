@@ -56,7 +56,7 @@ class _DashboardTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const wholesaler = WholesalerMockDataService.currentWholesaler;
+    final wholesaler = WholesalerMockDataService.currentWholesaler;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -69,7 +69,7 @@ class _DashboardTabContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Welcome back', style: AppTextStyles.subtitle),
+                    Text('Welcome back', style: AppTextStyles.subtitle),
                     const SizedBox(height: 2),
                     Text(wholesaler.businessName, style: AppTextStyles.heading2.copyWith(fontSize: 20)),
                   ],
@@ -82,7 +82,7 @@ class _DashboardTabContent extends StatelessWidget {
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: AppColors.primarySoft, shape: BoxShape.circle),
                   child: const Icon(Icons.notifications_rounded, color: AppColors.primary),
                 ),
               ),
@@ -97,12 +97,12 @@ class _DashboardTabContent extends StatelessWidget {
             crossAxisSpacing: 12,
             childAspectRatio: 1.5,
             children: [
-              const StatCard(label: 'Total Products', value: '${WholesalerMockDataService.totalProducts}', icon: Icons.inventory_2_rounded),
-              const StatCard(label: 'Active Products', value: '${WholesalerMockDataService.activeProducts}', icon: Icons.check_circle_rounded),
-              const StatCard(label: 'Active Orders', value: '${WholesalerMockDataService.activeOrders}', icon: Icons.local_shipping_rounded),
-              const StatCard(label: 'Pending Orders', value: '${WholesalerMockDataService.pendingOrders}', icon: Icons.hourglass_top_rounded, accentColor: AppColors.warning),
+              StatCard(label: 'Total Products', value: '${WholesalerMockDataService.totalProducts}', icon: Icons.inventory_2_rounded),
+              StatCard(label: 'Active Products', value: '${WholesalerMockDataService.activeProducts}', icon: Icons.check_circle_rounded),
+              StatCard(label: 'Active Orders', value: '${WholesalerMockDataService.activeOrders}', icon: Icons.local_shipping_rounded),
+              StatCard(label: 'Pending Orders', value: '${WholesalerMockDataService.pendingOrders}', icon: Icons.hourglass_top_rounded, accentColor: AppColors.warning),
               StatCard(label: 'Total Sales Value', value: '৳${WholesalerMockDataService.totalSalesValue.toStringAsFixed(0)}', icon: Icons.payments_rounded),
-              const StatCard(label: 'Active Communities', value: '${WholesalerMockDataService.activeCommunities}', icon: Icons.groups_rounded),
+              StatCard(label: 'Active Communities', value: '${WholesalerMockDataService.activeCommunities}', icon: Icons.groups_rounded),
             ],
           ),
           const SizedBox(height: 10),
@@ -112,11 +112,11 @@ class _DashboardTabContent extends StatelessWidget {
             icon: Icons.trending_up_rounded,
           ),
           const SizedBox(height: 28),
-          const Text('Recent Orders', style: AppTextStyles.title),
+          Text('Recent Orders', style: AppTextStyles.title),
           const SizedBox(height: 12),
           for (final order in WholesalerMockDataService.demandOrders.take(3)) DemandOrderCard(order: order),
           const SizedBox(height: 16),
-          const Text('Top Requested Products', style: AppTextStyles.title),
+          Text('Top Requested Products', style: AppTextStyles.title),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
