@@ -56,7 +56,7 @@ class OrderSummaryCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Your Share', style: AppTextStyles.caption),
+                    Text('Your Share', style: AppTextStyles.caption),
                     const SizedBox(height: 2),
                     Text('৳${order.memberShare.toStringAsFixed(0)}',
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
