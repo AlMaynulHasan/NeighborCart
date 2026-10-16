@@ -40,16 +40,16 @@ class _NearbyPoolsScreenState extends State<NearbyPoolsScreen> {
             controller: _searchController,
             onChanged: (v) => setState(() => _query = v),
             style: AppTextStyles.body,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Search by street or area...',
-              prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
-              suffixIcon: Icon(Icons.tune_rounded, color: AppColors.primary),
+              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textSecondary),
+              suffixIcon: const Icon(Icons.tune_rounded, color: AppColors.primary),
             ),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: pools.isEmpty
-                ? const Center(child: const Text('No pools found', style: AppTextStyles.bodySecondary))
+                ? Center(child: Text('No pools found', style: AppTextStyles.bodySecondary))
                 : ListView.separated(
                     itemCount: pools.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 14),
