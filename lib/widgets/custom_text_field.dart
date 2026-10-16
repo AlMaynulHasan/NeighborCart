@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 
 /// Reusable labeled text field matching the Login screen inputs
@@ -28,8 +29,7 @@ class CustomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+        Text(label, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
