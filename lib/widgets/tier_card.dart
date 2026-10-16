@@ -25,9 +25,9 @@ class TierRow extends StatelessWidget {
             ),
           ),
           if (tier.unlocked)
-            const Row(
+            Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: const [
                 Text('Unlocked', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
                 SizedBox(width: 4),
                 Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 18),
