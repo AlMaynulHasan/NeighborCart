@@ -36,15 +36,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.initState();
     final p = widget.existingProduct;
     _nameController = TextEditingController(text: p?.name ?? '');
-    _descriptionController = TextEditingController(
-        text:
-            ''); // not modeled on WholesalerProductModel yet — UI-only for now
+    _descriptionController = TextEditingController(text: ''); // not modeled on WholesalerProductModel yet — UI-only for now
     _categoryController = TextEditingController(text: p?.category ?? '');
-    _priceController = TextEditingController(
-        text: p != null ? p.wholesalePrice.toStringAsFixed(0) : '');
+    _priceController = TextEditingController(text: p != null ? p.wholesalePrice.toStringAsFixed(0) : '');
     _moqController = TextEditingController(text: p != null ? '${p.moq}' : '');
-    _quantityController =
-        TextEditingController(text: p != null ? '${p.availableQuantity}' : '');
+    _quantityController = TextEditingController(text: p != null ? '${p.availableQuantity}' : '');
     _shelfLifeController = TextEditingController(text: p?.shelfLife ?? '');
     _isActive = p?.isActive ?? true;
   }
@@ -61,8 +57,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
-  String? _requiredField(String? value) =>
-      (value == null || value.trim().isEmpty) ? 'Required' : null;
+  String? _requiredField(String? value) => (value == null || value.trim().isEmpty) ? 'Required' : null;
 
   String? _numberField(String? value) {
     if (value == null || value.trim().isEmpty) return 'Required';
@@ -73,8 +68,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   void _handleSave() {
     if (!_formKey.currentState!.validate()) return;
     final product = WholesalerProductModel(
-      id: widget.existingProduct?.id ??
-          'wp${DateTime.now().millisecondsSinceEpoch}',
+      id: widget.existingProduct?.id ?? 'wp${DateTime.now().millisecondsSinceEpoch}',
       name: _nameController.text.trim(),
       category: _categoryController.text.trim(),
       wholesalePrice: double.parse(_priceController.text),
@@ -90,8 +84,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
-      appBar: AppBar(
-          title: Text(widget.isEditing ? 'Edit Product' : 'Add Product')),
+      appBar: AppBar(title: Text(widget.isEditing ? 'Edit Product' : 'Add Product')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -108,33 +101,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: AppColors.border, style: BorderStyle.solid),
+                    border: Border.all(color: AppColors.border, style: BorderStyle.solid),
                   ),
                   alignment: Alignment.center,
-                  child: const Column(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_a_photo_outlined,
-                          color: AppColors.primary, size: 28),
+                    children: const [
+                      Icon(Icons.add_a_photo_outlined, color: AppColors.primary, size: 28),
                       SizedBox(height: 6),
                       Text('Add Product Image', style: AppTextStyles.caption),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                CustomTextField(
-                    label: 'Product Name',
-                    controller: _nameController,
-                    validator: _requiredField),
+                CustomTextField(label: 'Product Name', controller: _nameController, validator: _requiredField),
                 const SizedBox(height: 16),
-                CustomTextField(
-                    label: 'Description', controller: _descriptionController),
+                CustomTextField(label: 'Description', controller: _descriptionController),
                 const SizedBox(height: 16),
-                CustomTextField(
-                    label: 'Category',
-                    controller: _categoryController,
-                    validator: _requiredField),
+                CustomTextField(label: 'Category', controller: _categoryController, validator: _requiredField),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -181,8 +165,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(14),
@@ -190,12 +173,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                   child: SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Active',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: const Text('Visible to customer pools',
-                        style: AppTextStyles.caption),
+                    title: const Text('Active', style: TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: const Text('Visible to customer pools', style: AppTextStyles.caption),
                     value: _isActive,
-                    activeThumbColor: AppColors.primary,
+                    activeColor: AppColors.primary,
                     onChanged: (v) => setState(() => _isActive = v),
                   ),
                 ),
@@ -217,8 +198,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: CustomButton(
-                        label:
-                            widget.isEditing ? 'Save Changes' : 'Save Product',
+                        label: widget.isEditing ? 'Save Changes' : 'Save Product',
                         onPressed: _handleSave,
                       ),
                     ),
