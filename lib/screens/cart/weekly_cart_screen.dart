@@ -12,7 +12,7 @@ class WeeklyCartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cart = MockDataService.weeklyCart;
+    final cart = MockDataService.weeklyCart;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -119,7 +119,7 @@ class _CartSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Shared Cart Total', style: AppTextStyles.body),
+              Text('Shared Cart Total', style: AppTextStyles.body),
               Text('৳${cart.sharedCartTotal.toStringAsFixed(0)}',
                   style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
             ],
@@ -142,9 +142,9 @@ class _CartSummaryCard extends StatelessWidget {
                 style: AppTextStyles.caption.copyWith(decoration: TextDecoration.lineThrough),
               ),
               if (cart.wholesaleUnlocked)
-                const Row(
+                Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: const [
                     Text('Wholesale Unlocked', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
                     SizedBox(width: 4),
                     Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 16),
