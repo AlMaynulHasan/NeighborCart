@@ -28,7 +28,7 @@ class AlertsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           children: [
             if (lowStock.isNotEmpty) ...[
-              const Text('Low Stock', style: AppTextStyles.title),
+              Text('Low Stock', style: AppTextStyles.title),
               const SizedBox(height: 10),
               for (final product in lowStock)
                 AlertTile(
@@ -39,7 +39,7 @@ class AlertsScreen extends StatelessWidget {
               const SizedBox(height: 20),
             ],
             if (moqNotReached.isNotEmpty) ...[
-              const Text('MOQ Not Reached', style: AppTextStyles.title),
+              Text('MOQ Not Reached', style: AppTextStyles.title),
               const SizedBox(height: 10),
               for (final order in moqNotReached)
                 AlertTile(
@@ -50,7 +50,7 @@ class AlertsScreen extends StatelessWidget {
               const SizedBox(height: 20),
             ],
             if (moqReached.isNotEmpty) ...[
-              const Text('MOQ Reached', style: AppTextStyles.title),
+              Text('MOQ Reached', style: AppTextStyles.title),
               const SizedBox(height: 10),
               for (final order in moqReached)
                 AlertTile(
@@ -61,7 +61,7 @@ class AlertsScreen extends StatelessWidget {
                 ),
               const SizedBox(height: 20),
             ],
-            const Text('High-Demand Products', style: AppTextStyles.title),
+            Text('High-Demand Products', style: AppTextStyles.title),
             const SizedBox(height: 10),
             for (final name in WholesalerMockDataService.topRequestedProducts)
               AlertTile(
@@ -71,9 +71,9 @@ class AlertsScreen extends StatelessWidget {
                 severity: AlertSeverity.info,
               ),
             const SizedBox(height: 20),
-            const Text('Pending Orders', style: AppTextStyles.title),
+            Text('Pending Orders', style: AppTextStyles.title),
             const SizedBox(height: 10),
-            const AlertTile(
+            AlertTile(
               icon: Icons.hourglass_top_rounded,
               title: '${WholesalerMockDataService.pendingOrders} orders pending',
               subtitle: 'Awaiting confirmation or MOQ threshold',
