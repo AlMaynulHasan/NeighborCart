@@ -55,7 +55,7 @@ class _HomeTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const user = MockDataService.currentUser;
+    final user = MockDataService.currentUser;
     final pool = MockDataService.activePool;
 
     return SingleChildScrollView(
@@ -69,7 +69,7 @@ class _HomeTabContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Welcome back', style: AppTextStyles.subtitle),
+                    Text('Welcome back', style: AppTextStyles.subtitle),
                     const SizedBox(height: 2),
                     Text('Good morning, ${user.name} 👋', style: AppTextStyles.heading2),
                   ],
@@ -88,7 +88,7 @@ class _HomeTabContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recommended Items', style: AppTextStyles.title),
+              Text('Recommended Items', style: AppTextStyles.title),
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(foregroundColor: AppColors.primary),
@@ -173,7 +173,7 @@ class _ActivePoolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('DISCOUNT', style: AppTextStyles.caption),
+                    Text('DISCOUNT', style: AppTextStyles.caption),
                     const SizedBox(height: 4),
                     Text('${pool.discountPercent.toStringAsFixed(0)}% Off (${unlockedTier.label})',
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
@@ -184,7 +184,7 @@ class _ActivePoolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('YOUR SAVINGS', style: AppTextStyles.caption),
+                    Text('YOUR SAVINGS', style: AppTextStyles.caption),
                     const SizedBox(height: 4),
                     Text('৳${MockDataService.currentUserSavings.toStringAsFixed(0)}',
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
