@@ -5,6 +5,7 @@ import '../../core/constants/auth_mode.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/auth_mode_toggle.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -66,23 +67,43 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
-    // PHASE 1: simulate a brief loading state; replace with
-    // AuthService.signUp(...) once Firebase Authentication is wired up.
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    if (_isWholesaler) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const WholesalerDashboardScreen()),
+    try {
+      final profile = _isWholesaler
+          ? {
+              'businessName': _businessNameController.text.trim(),
+              'contactName': _contactNameController.text.trim(),
+            }
+          : {
+              'name': _nameController.text.trim(),
+            };
+      await AuthService.instance.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        role: _mode,
+        profile: profile,
       );
-    } else {
-      Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+      if (!mounted) return;
+      if (_isWholesaler) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const WholesalerDashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AuthService.friendlyError(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   void _handleGoogleSignUp() {
-    // PHASE 1 placeholder — wire to Firebase Authentication's Google
-    // provider later.
+    // Still a placeholder — same reason as Login's Google button (needs
+    // extra OAuth client setup for Flutter Web). Email/Password sign-up is
+    // fully wired to Firebase now.
     Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
   }
 
@@ -127,7 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: AppTextStyles.heading1.copyWith(color: AppColors.primary, fontSize: 26),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   AppConstants.appTagline,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.subtitle,
@@ -205,8 +226,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 if (!_isWholesaler) ...[
                   const SizedBox(height: 24),
-                  const Row(
-                    children: [
+                  Row(
+                    children: const [
                       Expanded(child: Divider()),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
