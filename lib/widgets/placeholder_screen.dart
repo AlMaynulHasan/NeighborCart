@@ -22,7 +22,7 @@ class PlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text(title, style: AppTextStyles.title),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Coming in a later build step.',
               style: AppTextStyles.bodySecondary,
               textAlign: TextAlign.center,
