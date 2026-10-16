@@ -19,7 +19,7 @@ class DemandScreen extends StatelessWidget {
         children: [
           Text('Orders / Demand', style: AppTextStyles.heading2.copyWith(fontSize: 24)),
           const SizedBox(height: 4),
-          const Text('Aggregated demand from active pools.', style: AppTextStyles.bodySecondary),
+          Text('Aggregated demand from active pools.', style: AppTextStyles.bodySecondary),
           const SizedBox(height: 16),
           Expanded(
             child: ListView(
