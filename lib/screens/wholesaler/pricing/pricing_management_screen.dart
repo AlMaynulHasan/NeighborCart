@@ -15,8 +15,7 @@ class PricingManagementScreen extends StatefulWidget {
   const PricingManagementScreen({super.key});
 
   @override
-  State<PricingManagementScreen> createState() =>
-      _PricingManagementScreenState();
+  State<PricingManagementScreen> createState() => _PricingManagementScreenState();
 }
 
 class _PricingManagementScreenState extends State<PricingManagementScreen> {
@@ -33,8 +32,7 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.scaffoldBackground,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EditTierSheet(tier: tier),
     );
     if (result != null) {
@@ -58,8 +56,7 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.scaffoldBackground,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EditTierSheet(tier: draft),
     );
     if (result != null) {
@@ -77,28 +74,22 @@ class _PricingManagementScreenState extends State<PricingManagementScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('MOQ & Pricing',
-                  style: AppTextStyles.heading2.copyWith(fontSize: 24)),
+              Text('MOQ & Pricing', style: AppTextStyles.heading2.copyWith(fontSize: 24)),
               ElevatedButton.icon(
                 onPressed: _addTier,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: const Text('Add Tier'),
-                style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(0, 42),
-                    padding: const EdgeInsets.symmetric(horizontal: 16)),
+                style: ElevatedButton.styleFrom(minimumSize: const Size(0, 42), padding: const EdgeInsets.symmetric(horizontal: 16)),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          const Text('Wholesale pricing tiers used across all active pools.',
-              style: AppTextStyles.bodySecondary),
+          Text('Wholesale pricing tiers used across all active pools.', style: AppTextStyles.bodySecondary),
           const SizedBox(height: 16),
           Expanded(
             child: ListView(
               children: [
-                for (final tier in _tiers)
-                  PricingTierEditorCard(
-                      tier: tier, onEdit: () => _editTier(tier)),
+                for (final tier in _tiers) PricingTierEditorCard(tier: tier, onEdit: () => _editTier(tier)),
                 const SizedBox(height: 16),
               ],
             ),
@@ -127,10 +118,8 @@ class _EditTierSheetState extends State<_EditTierSheet> {
   void initState() {
     super.initState();
     _labelController = TextEditingController(text: widget.tier.label);
-    _thresholdController = TextEditingController(
-        text: widget.tier.minimumThreshold.toStringAsFixed(0));
-    _discountController = TextEditingController(
-        text: widget.tier.discountPercent.toStringAsFixed(0));
+    _thresholdController = TextEditingController(text: widget.tier.minimumThreshold.toStringAsFixed(0));
+    _discountController = TextEditingController(text: widget.tier.discountPercent.toStringAsFixed(0));
     _isActive = widget.tier.isActive;
   }
 
@@ -146,35 +135,26 @@ class _EditTierSheetState extends State<_EditTierSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
+        left: 24, right: 24, top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Edit Tier', style: AppTextStyles.title),
+          Text('Edit Tier', style: AppTextStyles.title),
           const SizedBox(height: 18),
           CustomTextField(label: 'Tier Label', controller: _labelController),
           const SizedBox(height: 16),
-          CustomTextField(
-              label: 'Minimum Threshold (৳)',
-              controller: _thresholdController,
-              keyboardType: TextInputType.number),
+          CustomTextField(label: 'Minimum Threshold (৳)', controller: _thresholdController, keyboardType: TextInputType.number),
           const SizedBox(height: 16),
-          CustomTextField(
-              label: 'Discount (%)',
-              controller: _discountController,
-              keyboardType: TextInputType.number),
+          CustomTextField(label: 'Discount (%)', controller: _discountController, keyboardType: TextInputType.number),
           const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Active',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            title: const Text('Active', style: TextStyle(fontWeight: FontWeight.w700)),
             value: _isActive,
-            activeThumbColor: AppColors.primary,
+            activeColor: AppColors.primary,
             onChanged: (v) => setState(() => _isActive = v),
           ),
           const SizedBox(height: 16),
@@ -183,10 +163,8 @@ class _EditTierSheetState extends State<_EditTierSheet> {
             onPressed: () {
               final updated = widget.tier.copyWith(
                 label: _labelController.text.trim(),
-                minimumThreshold: double.tryParse(_thresholdController.text) ??
-                    widget.tier.minimumThreshold,
-                discountPercent: double.tryParse(_discountController.text) ??
-                    widget.tier.discountPercent,
+                minimumThreshold: double.tryParse(_thresholdController.text) ?? widget.tier.minimumThreshold,
+                discountPercent: double.tryParse(_discountController.text) ?? widget.tier.discountPercent,
                 isActive: _isActive,
               );
               Navigator.of(context).pop(updated);
