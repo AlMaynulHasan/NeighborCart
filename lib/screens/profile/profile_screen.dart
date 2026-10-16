@@ -3,6 +3,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/auth_mode.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../services/auth_service.dart';
 import '../../services/mock_data_service.dart';
 import '../auth/login_screen.dart';
 
@@ -22,7 +23,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const user = MockDataService.currentUser;
+    final user = MockDataService.currentUser;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -44,7 +45,9 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.logout_rounded,
             label: 'Log Out',
             isDestructive: true,
-            onTap: () {
+            onTap: () async {
+              await AuthService.instance.signOut();
+              if (!context.mounted) return;
               Navigator.of(context).pushNamedAndRemoveUntil(
                 AppConstants.routeLogin,
                 (route) => false,
