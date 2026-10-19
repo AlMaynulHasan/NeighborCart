@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
-import '../models/pool_model.dart';
+import '../core/utils/format.dart';
+import '../services/pool_service.dart';
 
 /// Pool summary card used on the "Nearby Pools" screen.
 class PoolCard extends StatelessWidget {
-  final NearbyPoolSummary pool;
-  final VoidCallback onJoin;
+  final PoolView poolView;
+  final bool isMember;
+  final VoidCallback onPressed;
 
-  const PoolCard({super.key, required this.pool, required this.onJoin});
+  const PoolCard({
+    super.key,
+    required this.poolView,
+    required this.isMember,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final pool = poolView.pool;
+    final discount = poolView.priceBreak.discountPercent;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -35,20 +45,21 @@ class PoolCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${pool.discountPercent.toStringAsFixed(0)}% OFF',
+                  discount > 0 ? '${discount.round()}% OFF' : 'NEW POOL',
                   style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text('৳${pool.collectiveOrders.toStringAsFixed(0)} collective orders', style: AppTextStyles.bodySecondary),
+          Text('${formatTaka(pool.collectiveValue, commas: false)} collective orders',
+              style: AppTextStyles.bodySecondary),
           const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
-              Expanded(child: Text(pool.pickupLocation, style: AppTextStyles.bodySecondary)),
+              Expanded(child: Text('Pickup: ${pool.pickupLocation}', style: AppTextStyles.bodySecondary)),
             ],
           ),
           const SizedBox(height: 4),
@@ -66,27 +77,29 @@ class PoolCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySoft,
-                        borderRadius: BorderRadius.circular(20),
+                    if (pool.extraMembers > 0) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primarySoft,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text('+${pool.extraMembers}',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
                       ),
-                      child: Text('+${pool.extraAvatarCount}',
-                          style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('${pool.joinedCount} joined', style: AppTextStyles.bodySecondary),
+                      const SizedBox(width: 8),
+                    ],
+                    Text('${pool.memberCount} joined', style: AppTextStyles.bodySecondary),
                   ],
                 ),
               ),
               ElevatedButton(
-                onPressed: onJoin,
+                onPressed: onPressed,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(120, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                 ),
-                child: const Text('Join Pool'),
+                child: Text(isMember ? 'View Pool' : 'Join Pool'),
               ),
             ],
           ),

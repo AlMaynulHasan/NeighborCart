@@ -80,6 +80,20 @@ class AuthService {
     return user;
   }
 
+  /// Called once at app start: restores a saved session and returns the
+  /// account's role, or null when nobody is signed in.
+  Future<AuthMode?> restoreSession() async {
+    final user = await _auth.authStateChanges().first;
+    if (user == null) return null;
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    final role = doc.data()?['role'] as String?;
+    if (role == null) {
+      await _auth.signOut();
+      return null;
+    }
+    return role == 'wholesaler' ? AuthMode.wholesaler : AuthMode.customer;
+  }
+
   Future<void> signOut() => _auth.signOut();
 
   /// Turns a FirebaseAuthException into a short, person-readable message.

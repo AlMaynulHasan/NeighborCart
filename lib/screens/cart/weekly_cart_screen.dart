@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../models/cart_model.dart';
+import '../../core/utils/format.dart';
 import '../../models/product_model.dart';
-import '../../services/mock_data_service.dart';
+import '../../services/cart_service.dart';
+import '../../services/order_service.dart';
+import '../../services/pool_service.dart';
+import '../../widgets/quantity_stepper.dart';
+import '../../widgets/stream_view.dart';
+import '../home/all_products_screen.dart';
 import '../settlement/settlement_screen.dart';
 
 /// Matches Figma screen 5 ("Weekly Cart").
@@ -12,45 +17,100 @@ class WeeklyCartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cart = MockDataService.weeklyCart;
+    return StreamView<CartView>(
+      create: () => CartService.instance.watchCartView(),
+      builder: (context, cart) {
+        final poolView = cart.poolView;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Weekly Cart', style: AppTextStyles.heading2.copyWith(fontSize: 24)),
-          const SizedBox(height: 4),
-          Text('Sharing order with ${cart.poolName}', style: AppTextStyles.bodySecondary),
-          const SizedBox(height: 14),
-          Expanded(
-            child: ListView(
-              children: [
-                for (final item in cart.items) _CartItemRow(item: item),
-                const SizedBox(height: 4),
-                _CartSummaryCard(cart: cart),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SettlementScreen()),
-                    );
-                  },
-                  child: const Text('Proceed to Split details'),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Weekly Cart', style: AppTextStyles.heading2.copyWith(fontSize: 24)),
+              const SizedBox(height: 4),
+              Text(
+                poolView == null
+                    ? 'You are not in a pool yet'
+                    : 'Sharing order with ${poolView.pool.name}',
+                style: AppTextStyles.bodySecondary,
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: poolView == null
+                    ? Center(
+                        child: Text(
+                          'Join a pool from the Pools tab to start shopping.',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodySecondary,
+                        ),
+                      )
+                    : cart.items.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Your cart is empty.', style: AppTextStyles.bodySecondary),
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const AllProductsScreen()),
+                                  ),
+                                  style: ElevatedButton.styleFrom(minimumSize: const Size(180, 46)),
+                                  child: const Text('Browse Products'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView(
+                            children: [
+                              for (final item in cart.items) _CartItemRow(item: item, poolId: poolView.pool.id),
+                              const SizedBox(height: 4),
+                              _CartSummaryCard(cart: cart, poolView: poolView),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  try {
+                                    await OrderService.instance
+                                        .upsertPending(pool: poolView.pool, share: cart.estimatedCost);
+                                  } catch (_) {
+                                    // Not fatal — settlement is computed live anyway.
+                                  }
+                                  if (!context.mounted) return;
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const SettlementScreen()),
+                                  );
+                                },
+                                child: const Text('Proceed to Split details'),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _CartItemRow extends StatelessWidget {
   final ProductModel item;
-  const _CartItemRow({required this.item});
+  final String poolId;
+  const _CartItemRow({required this.item, required this.poolId});
+
+  void _change(BuildContext context, int delta) {
+    CartService.instance
+        .changeQuantity(poolId: poolId, product: item, delta: delta)
+        .catchError((_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not update your cart. Please try again.')),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,19 +140,17 @@ class _CartItemRow extends StatelessWidget {
               children: [
                 Text(item.name, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text('৳${item.price.toStringAsFixed(0)} • ${item.description}', style: AppTextStyles.caption),
+                Text('${formatTaka(item.price)} • ${item.description}',
+                    style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
-                Text('৳${item.subtotal.toStringAsFixed(0)}', style: AppTextStyles.priceSmall),
+                Text(formatTaka(item.subtotal), style: AppTextStyles.priceSmall),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.scaffoldBackground,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text('Qty: ${item.quantity}', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700)),
+          QuantityStepper(
+            quantity: item.quantity,
+            onIncrement: () => _change(context, 1),
+            onDecrement: () => _change(context, -1),
           ),
         ],
       ),
@@ -101,11 +159,16 @@ class _CartItemRow extends StatelessWidget {
 }
 
 class _CartSummaryCard extends StatelessWidget {
-  final CartModel cart;
-  const _CartSummaryCard({required this.cart});
+  final CartView cart;
+  final PoolView poolView;
+  const _CartSummaryCard({required this.cart, required this.poolView});
 
   @override
   Widget build(BuildContext context) {
+    final pb = poolView.priceBreak;
+    final unlocked = pb.unlockedTier != null;
+    final next = pb.nextTier;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -120,7 +183,7 @@ class _CartSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Shared Cart Total', style: AppTextStyles.body),
-              Text('৳${cart.sharedCartTotal.toStringAsFixed(0)}',
+              Text(formatTaka(poolView.pool.collectiveValue),
                   style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
@@ -129,23 +192,28 @@ class _CartSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Your Estimated Cost', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
-              Text('৳${cart.estimatedCost.toStringAsFixed(0)}',
-                  style: AppTextStyles.body.copyWith(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.primary)),
+              Text(formatTaka(cart.estimatedCost),
+                  style: AppTextStyles.body
+                      .copyWith(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.primary)),
             ],
           ),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Retail Price: ৳${cart.retailPrice.toStringAsFixed(0)}',
-                style: AppTextStyles.caption.copyWith(decoration: TextDecoration.lineThrough),
-              ),
-              if (cart.wholesaleUnlocked)
+              if (unlocked)
+                Text(
+                  'Retail Price: ${formatTaka(cart.subtotal)}',
+                  style: AppTextStyles.caption.copyWith(decoration: TextDecoration.lineThrough),
+                )
+              else
+                Text('Retail Price: ${formatTaka(cart.subtotal)}', style: AppTextStyles.caption),
+              if (unlocked)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Text('Wholesale Unlocked', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+                    Text('Wholesale Unlocked',
+                        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
                     SizedBox(width: 4),
                     Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 16),
                   ],
@@ -155,15 +223,23 @@ class _CartSummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: unlocked ? AppColors.primarySoft : AppColors.warningSoft,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'You save ৳${cart.savings.toStringAsFixed(0)} on this weekly order!',
-              style: AppTextStyles.body.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+              unlocked
+                  ? 'You save ${formatTaka(cart.savings)} on this weekly order!'
+                  : next == null
+                      ? 'No wholesale tiers are active yet.'
+                      : 'Add ${formatTaka(pb.amountToNext)} more to the pool to unlock ${next.discountPercent.round()}% off.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: unlocked ? AppColors.primary : AppColors.warning,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

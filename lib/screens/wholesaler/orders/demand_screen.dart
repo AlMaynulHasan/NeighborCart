@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../services/wholesaler_mock_data_service.dart';
+import '../../../services/demand_service.dart';
+import '../../../widgets/stream_view.dart';
 import '../../../widgets/wholesaler/demand_order_card.dart';
 
-/// Order/Demand View — aggregated demand coming from NeighborCart pools
-/// (Master Prompt section 17, Community Demand Aggregation).
+/// Order/Demand View — aggregated demand from NeighborCart pools for this
+/// wholesaler's products (Community Demand Aggregation).
 class DemandScreen extends StatelessWidget {
   const DemandScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final orders = WholesalerMockDataService.demandOrders;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(
@@ -22,11 +21,24 @@ class DemandScreen extends StatelessWidget {
           Text('Aggregated demand from active pools.', style: AppTextStyles.bodySecondary),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView(
-              children: [
-                for (final order in orders) DemandOrderCard(order: order),
-                const SizedBox(height: 16),
-              ],
+            child: StreamView<WholesalerOverview>(
+              create: () => DemandService.instance.watchOverview(),
+              builder: (context, overview) {
+                if (overview.orders.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No demand for your products yet.',
+                      style: AppTextStyles.bodySecondary,
+                    ),
+                  );
+                }
+                return ListView(
+                  children: [
+                    for (final order in overview.orders) DemandOrderCard(order: order),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              },
             ),
           ),
         ],

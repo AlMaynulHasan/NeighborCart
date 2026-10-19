@@ -1,56 +1,82 @@
-import 'pool_tier_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/utils/format.dart';
 
-/// Represents a local buying pool (e.g. "Saidpur Block-C Pool").
+/// One product's total requested quantity across a pool (kept on the pool
+/// doc as `demand.{productId}.{name,qty}` so the wholesaler side can read
+/// aggregated demand without scanning every member's cart).
+class PoolDemandItem {
+  final String productId;
+  final String name;
+  final int quantity;
+
+  const PoolDemandItem({
+    required this.productId,
+    required this.name,
+    required this.quantity,
+  });
+}
+
 class PoolModel {
   final String id;
   final String name;
+  final String pickupLocation;
+  final String coordinatorName;
+  final String coordinatorUid;
   final double collectiveValue;
   final int memberCount;
-  final double discountPercent; // currently unlocked discount, e.g. 15
-  final String pickupLocation;
+  final int orderNumber;
   final DateTime deadline;
-  final String coordinatorName;
-  final String? coordinatorAvatarUrl;
-  final List<PoolTier> tiers;
-  final double targetForNextTier;
-  final double collectedTowardNextTier;
+  final DateTime? updatedAt;
+  final Map<String, PoolDemandItem> demand;
 
   const PoolModel({
     required this.id,
     required this.name,
+    required this.pickupLocation,
+    required this.coordinatorName,
+    required this.coordinatorUid,
     required this.collectiveValue,
     required this.memberCount,
-    required this.discountPercent,
-    required this.pickupLocation,
+    required this.orderNumber,
     required this.deadline,
-    required this.coordinatorName,
-    this.coordinatorAvatarUrl,
-    required this.tiers,
-    required this.targetForNextTier,
-    required this.collectedTowardNextTier,
+    required this.updatedAt,
+    required this.demand,
   });
-}
 
-/// Lightweight summary used on cards (Nearby Pools list) where the full
-/// tier breakdown isn't needed.
-class NearbyPoolSummary {
-  final String id;
-  final String name;
-  final double discountPercent;
-  final double collectiveOrders;
-  final String pickupLocation;
-  final String closesLabel; // e.g. "Closes Thu 8 PM"
-  final int joinedCount;
-  final int extraAvatarCount; // the "+5" shown over avatar stack
+  factory PoolModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final d = doc.data() ?? <String, dynamic>{};
+    final rawDemand = (d['demand'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+    final demand = <String, PoolDemandItem>{};
+    rawDemand.forEach((key, value) {
+      final m = value as Map<String, dynamic>;
+      final qty = (m['qty'] as num?)?.toInt() ?? 0;
+      if (qty > 0) {
+        demand[key] = PoolDemandItem(
+          productId: key,
+          name: (m['name'] as String?) ?? key,
+          quantity: qty,
+        );
+      }
+    });
+    return PoolModel(
+      id: doc.id,
+      name: (d['name'] as String?) ?? 'Pool',
+      pickupLocation: (d['pickupLocation'] as String?) ?? '',
+      coordinatorName: (d['coordinatorName'] as String?) ?? '',
+      coordinatorUid: (d['coordinatorUid'] as String?) ?? '',
+      collectiveValue: (d['collectiveValue'] as num?)?.toDouble() ?? 0,
+      memberCount: (d['memberCount'] as num?)?.toInt() ?? 0,
+      orderNumber: (d['orderNumber'] as num?)?.toInt() ?? 0,
+      deadline: (d['deadline'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
+      demand: demand,
+    );
+  }
 
-  const NearbyPoolSummary({
-    required this.id,
-    required this.name,
-    required this.discountPercent,
-    required this.collectiveOrders,
-    required this.pickupLocation,
-    required this.closesLabel,
-    required this.joinedCount,
-    required this.extraAvatarCount,
-  });
+  bool get isClosed => deadline.isBefore(DateTime.now());
+  String get closesLabel => isClosed ? 'Closed' : formatClosesShort(deadline);
+  String get deadlineLabel => formatDeadlineLong(deadline);
+
+  /// The "+N" shown next to the avatar stack (3 avatars are drawn).
+  int get extraMembers => memberCount > 3 ? memberCount - 3 : 0;
 }

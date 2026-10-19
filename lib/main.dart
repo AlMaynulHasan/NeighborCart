@@ -4,6 +4,7 @@ import 'core/constants/app_constants.dart';
 import 'core/constants/auth_mode.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
+import 'screens/auth/auth_gate.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -23,16 +24,21 @@ class NeighborCartApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: AppConstants.routeLogin,
+      // Always start at AuthGate, whatever the browser URL says (e.g. after a
+      // refresh on /#/home). AuthGate restores the saved Firebase session
+      // first, then opens the customer app, wholesaler app, or Login.
+      onGenerateInitialRoutes: (String initialRoute) => [
+        MaterialPageRoute(
+          settings: const RouteSettings(name: '/'),
+          builder: (_) => const AuthGate(),
+        ),
+      ],
       routes: {
         AppConstants.routeLogin: (_) => const LoginScreen(),
         AppConstants.routeSignup: (_) => const SignupScreen(),
         AppConstants.routeHome: (_) => const HomeScreen(),
-        // Same Login screen, opened straight into Wholesaler mode — kept
-        // as its own route so a direct link (e.g. from the Profile
-        // screen's "Switch portal", or a bookmarked URL on web) can jump
-        // right past the toggle.
-        AppConstants.routeWholesalerLogin: (_) => const LoginScreen(initialMode: AuthMode.wholesaler),
+        AppConstants.routeWholesalerLogin: (_) =>
+            const LoginScreen(initialMode: AuthMode.wholesaler),
       },
     );
   }

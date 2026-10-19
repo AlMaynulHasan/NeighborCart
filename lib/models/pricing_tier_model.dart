@@ -1,8 +1,6 @@
-/// A wholesale pricing tier as configured by the wholesaler — the source
-/// data behind the customer-side price-break tiers shown in
-/// PoolTier/TierRow (Master Prompt section 11, section 6 "MOQ & Pricing
-/// Management"). Kept as a separate, editable model since only the
-/// wholesaler side can change it.
+/// A wholesale pricing tier as configured by the wholesaler. Stored as an
+/// array inside `config/pricing` and used by the price-break engine on the
+/// customer side.
 class PricingTierModel {
   final String id;
   final String label;
@@ -17,6 +15,24 @@ class PricingTierModel {
     required this.discountPercent,
     required this.isActive,
   });
+
+  factory PricingTierModel.fromMap(Map<String, dynamic> m) {
+    return PricingTierModel(
+      id: (m['id'] as String?) ?? '',
+      label: (m['label'] as String?) ?? 'Tier',
+      minimumThreshold: (m['minimumThreshold'] as num?)?.toDouble() ?? 0,
+      discountPercent: (m['discountPercent'] as num?)?.toDouble() ?? 0,
+      isActive: (m['isActive'] as bool?) ?? true,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'label': label,
+        'minimumThreshold': minimumThreshold,
+        'discountPercent': discountPercent,
+        'isActive': isActive,
+      };
 
   PricingTierModel copyWith({
     String? label,

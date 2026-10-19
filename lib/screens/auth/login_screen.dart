@@ -83,7 +83,11 @@ class _LoginScreenState extends State<LoginScreen> {
     // configured in Google Cloud + a <meta> tag in web/index.html for
     // Flutter Web specifically. Email/Password is fully wired to Firebase
     // now; Google is the next piece once that extra setup is done.
-    Navigator.of(context).pushReplacementNamed(AppConstants.routeHome);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text(
+              'Google sign-in is not available yet. Please use your email and password.')),
+    );
   }
 
   @override
@@ -103,11 +107,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 96,
                     width: 96,
                     decoration: BoxDecoration(
-                      color: _isWholesaler ? AppColors.textPrimary : AppColors.primary,
+                      color: _isWholesaler
+                          ? AppColors.textPrimary
+                          : AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _isWholesaler ? Icons.storefront_rounded : Icons.shopping_cart_rounded,
+                      _isWholesaler
+                          ? Icons.storefront_rounded
+                          : Icons.shopping_cart_rounded,
                       color: Colors.white,
                       size: 44,
                     ),
@@ -117,7 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   AppConstants.appName,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.heading1.copyWith(color: AppColors.primary, fontSize: 30),
+                  style: AppTextStyles.heading1
+                      .copyWith(color: AppColors.primary, fontSize: 30),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -126,10 +135,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: AppTextStyles.subtitle,
                 ),
                 const SizedBox(height: 24),
-                AuthModeToggle(mode: _mode, onChanged: (m) => setState(() => _mode = m)),
+                AuthModeToggle(
+                    mode: _mode, onChanged: (m) => setState(() => _mode = m)),
                 const SizedBox(height: 28),
                 CustomTextField(
-                  label: _isWholesaler ? 'Business Email or Phone' : 'Email or Phone Number',
+                  label: _isWholesaler
+                      ? 'Business Email or Phone'
+                      : 'Email or Phone Number',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.emailOrPhone,
@@ -142,10 +154,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: Validators.password,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -153,8 +168,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                    child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.w600)),
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary),
+                    child: const Text('Forgot Password?',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -187,15 +204,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: RichText(
                     text: TextSpan(
-                      style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.body
+                          .copyWith(color: AppColors.textSecondary),
                       children: [
-                        TextSpan(text: _isWholesaler ? "Don't have a business account? " : "Don't have an account? "),
+                        TextSpan(
+                            text: _isWholesaler
+                                ? "Don't have a business account? "
+                                : "Don't have an account? "),
                         TextSpan(
                           text: 'Sign Up',
-                          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () => Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => SignupScreen(initialMode: _mode)),
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          SignupScreen(initialMode: _mode)),
                                 ),
                         ),
                       ],

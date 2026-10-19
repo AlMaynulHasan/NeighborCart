@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../models/user_model.dart';
 import '../../../services/auth_service.dart';
-import '../../../services/wholesaler_mock_data_service.dart';
+import '../../../services/seed_service.dart';
+import '../../../services/user_service.dart';
+import '../../../widgets/stream_view.dart';
 import '../../auth/login_screen.dart';
 
 /// Simple wholesaler account screen — same option-list pattern as the
-/// customer ProfileScreen, kept separate as its own widget per the
-/// module's "do not mix" navigation rule.
+/// customer ProfileScreen, kept separate per the "do not mix" rule.
 class WholesalerProfileScreen extends StatelessWidget {
   const WholesalerProfileScreen({super.key});
 
@@ -19,42 +21,69 @@ class WholesalerProfileScreen extends StatelessWidget {
     (icon: Icons.settings_outlined, label: 'Settings'),
   ];
 
+  Future<void> _loadDemoCatalog(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final uid = AuthService.instance.currentUser!.uid;
+      final created = await SeedService.instance.seedWholesalerCatalog(uid);
+      messenger.showSnackBar(SnackBar(
+        content: Text(created == 0
+            ? 'Demo products are already loaded.'
+            : 'Loaded $created demo products and default tiers.'),
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Could not load demo products: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final wholesaler = WholesalerMockDataService.currentWholesaler;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        children: [
-          const CircleAvatar(
-            radius: 44,
-            backgroundColor: AppColors.primarySoft,
-            child: Icon(Icons.storefront_rounded, size: 40, color: AppColors.primary),
+    return StreamView<UserModel>(
+      create: () => UserService.instance.watchCurrentUser(),
+      builder: (context, user) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            children: [
+              const CircleAvatar(
+                radius: 44,
+                backgroundColor: AppColors.primarySoft,
+                child: Icon(Icons.storefront_rounded, size: 40, color: AppColors.primary),
+              ),
+              const SizedBox(height: 14),
+              Text(user.displayName,
+                  style: AppTextStyles.heading2.copyWith(fontSize: 19), textAlign: TextAlign.center),
+              const SizedBox(height: 4),
+              if (user.contactName != null) Text(user.contactName!, style: AppTextStyles.bodySecondary),
+              Text(user.emailOrPhone, style: AppTextStyles.bodySecondary),
+              const SizedBox(height: 28),
+              for (final option in _options) _OptionTile(icon: option.icon, label: option.label),
+              const SizedBox(height: 6),
+              _OptionTile(
+                icon: Icons.logout_rounded,
+                label: 'Log Out',
+                isDestructive: true,
+                onTap: () async {
+                  await AuthService.instance.signOut();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              Text('Developer tools', style: AppTextStyles.caption),
+              const SizedBox(height: 8),
+              _OptionTile(
+                icon: Icons.build_outlined,
+                label: 'Load demo products & tiers',
+                onTap: () => _loadDemoCatalog(context),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          Text(wholesaler.businessName, style: AppTextStyles.heading2.copyWith(fontSize: 19), textAlign: TextAlign.center),
-          const SizedBox(height: 4),
-          Text(wholesaler.contactName, style: AppTextStyles.bodySecondary),
-          Text(wholesaler.emailOrPhone, style: AppTextStyles.bodySecondary),
-          const SizedBox(height: 28),
-          for (final option in _options) _OptionTile(icon: option.icon, label: option.label),
-          const SizedBox(height: 6),
-          _OptionTile(
-            icon: Icons.logout_rounded,
-            label: 'Log Out',
-            isDestructive: true,
-            onTap: () async {
-              await AuthService.instance.signOut();
-              if (!context.mounted) return;
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

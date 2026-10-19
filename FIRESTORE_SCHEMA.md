@@ -1,136 +1,40 @@
-# NeighborCart — Firestore Data Model (Phase 2 draft)
+# NeighborCart — Firestore data model (as implemented)
 
-This is the collection/field plan we'll wire the app to once Firebase is
-connected. Written now so the Phase 2 service classes can be built
-straight from it instead of improvising field names later.
-
-Collections marked **(seed)** need at least one demo document manually
-added (or via a one-time seed script) since Firestore starts empty —
-unlike MockDataService, nothing shows up until data exists.
-
-## users
 ```
 users/{uid}
-  name: string
-  emailOrPhone: string
-  avatarUrl: string?
-  role: "customer" | "wholesaler"
-  createdAt: timestamp
-```
+  role: "customer" | "wholesaler", email, createdAt
+  customer:   name, activePoolId, joinedPoolIds[]
+  wholesaler: businessName, contactName
+  orders/{poolId}                      # one order per member per pool
+    poolId, poolName, orderNumber, amount (member share), poolTotal,
+    status: "pending" | "paid", updatedAt
 
-## pools  (seed)
-```
 pools/{poolId}
-  name: string
-  collectiveValue: number
-  memberCount: number
-  pickupLocation: string
-  deadline: timestamp
-  coordinatorUid: string
-  tiers: [ { label, threshold, discountPercent } ]   // small + fixed, embed rather than subcollection
-  createdAt: timestamp
-```
+  name, pickupLocation, deadline, coordinatorName, coordinatorUid,
+  orderNumber, memberCount, createdAt, updatedAt
+  collectiveValue            # sum of all members' cart subtotals (list price)
+  demand: { productId: { name, qty } }   # aggregated demand, kept in sync
+  pool_members/{uid}   name, role, joinedAt
+  carts/{uid}          items[{productId,name,description,price,quantity}], subtotal, updatedAt
+  payments/{uid}       uid, amount, paidAt
 
-## pool_members
-```
-pools/{poolId}/pool_members/{uid}
-  joinedAt: timestamp
-  role: "member" | "coordinator"
-```
-
-## products  (seed)
-```
 products/{productId}
-  name: string
-  description: string
-  category: string
-  wholesalePrice: number
-  moq: number
-  availableQuantity: number
-  shelfLife: string
-  isActive: boolean
-  imageUrl: string?
-  wholesalerUid: string
+  name, description, category, wholesalePrice (unit price shown to customers),
+  moq, availableQuantity, shelfLife, isActive, wholesalerUid, createdAt
+
+config/pricing
+  tiers: [ { id, label, minimumThreshold, discountPercent, isActive } ]
 ```
 
-## carts
-```
-pools/{poolId}/carts/{uid}
-  items: [ { productId, name, price, quantity } ]   // small enough to embed
-  updatedAt: timestamp
-```
+## How the numbers work
+- Cart changes run in a transaction that updates the member's cart AND the
+  pool's `collectiveValue` / `demand` together.
+- Discount = highest active tier whose `minimumThreshold` <= `collectiveValue`
+  (see `lib/core/utils/price_break.dart`). A member's cost = subtotal x (1 - discount).
+- A pool's MOQ is "reached" when every requested product (of that wholesaler)
+  has total demand >= its MOQ.
 
-## orders  (settlement)
-```
-pools/{poolId}/orders/{orderId}
-  totalAmount: number
-  deadline: timestamp
-  status: "open" | "settled"
-  createdAt: timestamp
-```
-
-## order_members
-```
-pools/{poolId}/orders/{orderId}/order_members/{uid}
-  share: number
-  itemsOrdered: number
-  status: "paid" | "pending"
-```
-
-## payments
-```
-payments/{paymentId}
-  orderId: string
-  poolId: string
-  uid: string
-  amount: number
-  paidAt: timestamp?
-```
-
-## wholesalers  (seed)
-```
-wholesalers/{uid}
-  businessName: string
-  contactName: string
-  emailOrPhone: string
-  createdAt: timestamp
-```
-
-## pricing_tiers
-```
-wholesalers/{uid}/pricing_tiers/{tierId}
-  label: string
-  minimumThreshold: number
-  discountPercent: number
-  isActive: boolean
-```
-
-## reliability
-```
-users/{uid}/reliability/summary
-  paymentCompletionRate: number
-  pickupParticipationRate: number
-  completedOrders: number
-  score: number   // formula left open per Master Prompt section 14
-```
-
-## pickups
-```
-pools/{poolId}/pickups/{pickupId}
-  location: string
-  scheduledFor: timestamp
-  status: "scheduled" | "completed"
-```
-
----
-
-### Notes
-- Small, fixed-shape lists (`tiers`, `items`, `productsRequested`) are
-  embedded as arrays/maps rather than subcollections — cheaper reads,
-  and they never grow large enough to need pagination.
-- `pool_members`, `order_members`, `pricing_tiers` are subcollections
-  because they can grow and benefit from being queried independently.
-- Security rules aren't drafted yet — Phase 1 setup uses test mode
-  (open read/write) on purpose. We'll write real rules (only a pool's
-  own members can read/write its cart, only the owning wholesaler can
-  edit their products, etc.) before this goes anywhere near production.
+## Not done yet
+- Pricing/settlement math runs on the client (Cloud Functions need the paid plan).
+- Weekly cycle reset, coordinator rotation, reliability score, creating pools in-app.
+- Real security rules (current rules are fully open — demo only).

@@ -1,18 +1,30 @@
 # NeighborCart
 
-Flutter + Firebase group-buying app (customer side + wholesaler side).
+Flutter + Firebase group-buying app. Neighbors join a local pool, combine grocery
+orders, unlock wholesale price tiers, split the cost and pick up together.
+Two sides in one app: **Customer** and **Wholesaler**.
 
-## First-time setup (after cloning / extracting)
+## Run it
+```
+flutter pub get
+flutter run -d chrome        # or a connected Android device / emulator
+```
+Firebase project: `neighborcart-3a0db`. `lib/firebase_options.dart`, `android/` and `web/`
+are already in this repo — no extra setup needed.
 
-1. Generate the native platform folders (they are not stored in this repo):
-   `flutter create . --org com.neighborcart --platforms=web,android`
-2. Connect Firebase (needs `firebase login` once):
-   `flutterfire configure --project=neighborcart-3a0db`
-   Select android + web. This creates `lib/firebase_options.dart`.
-3. `flutter pub get`
-4. `flutter run -d chrome`  (or a connected Android device/emulator)
+## Try it with demo data
+1. Sign up as **Wholesaler** (toggle on the login screen) -> Profile -> *Load demo products & tiers*.
+2. Log out, sign up as **Customer** -> Profile -> *Load demo pools*.
+3. Pools tab -> open a pool -> *Join Pool & Start Shopping* -> add items -> *Proceed to Split details* -> *Pay Now*.
+4. Log in as the wholesaler again to see demand, MOQ status and alerts update.
 
-If the Android build complains about minSdk, set `minSdk = 23` in
-`android/app/build.gradle(.kts)`.
+## Where things are
+- `lib/screens/` customer screens + `lib/screens/wholesaler/` wholesaler screens
+- `lib/services/` all Firebase/Firestore calls (screens never call Firebase directly)
+- `lib/core/utils/price_break.dart` price-tier logic (thresholds come from Firestore `config/pricing`)
+- `FIRESTORE_SCHEMA.md` data model, `firestore.rules` demo rules (fully open — not for production)
+- `Figma Design/` UI reference, `NeighborCartProposal.docx` project proposal
 
-See `FIRESTORE_SCHEMA.md` for the data model and `firestore.rules` for the demo rules.
+## Known gaps
+Pool creation UI, Google sign-in, product images (needs paid Firebase plan), phone-number login,
+weekly cart reset, coordinator rotation, reliability score, real security rules.

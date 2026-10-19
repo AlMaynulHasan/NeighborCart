@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../models/user_model.dart';
 import '../../../models/wholesaler_product_model.dart';
-import '../../../services/wholesaler_mock_data_service.dart';
+import '../../../services/product_service.dart';
+import '../../../services/user_service.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_text_field.dart';
 
-/// Shared Add/Edit form (spec: "Edit Product... using the same form
-/// structure as Add Product"). Pass `existingProduct` to edit; omit it to
-/// add a new product.
+/// Shared Add/Edit form. Pass `existingProduct` to edit; omit it to add.
+/// Saves straight to Firestore through ProductService.
 class AddEditProductScreen extends StatefulWidget {
   final WholesalerProductModel? existingProduct;
 
@@ -30,13 +31,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late final TextEditingController _quantityController;
   late final TextEditingController _shelfLifeController;
   late bool _isActive;
+  bool _isSaving = false;
+  late final Stream<UserModel> _userStream = UserService.instance.watchCurrentUser();
 
   @override
   void initState() {
     super.initState();
     final p = widget.existingProduct;
     _nameController = TextEditingController(text: p?.name ?? '');
-    _descriptionController = TextEditingController(text: ''); // not modeled on WholesalerProductModel yet — UI-only for now
+    _descriptionController = TextEditingController(text: p?.description ?? '');
     _categoryController = TextEditingController(text: p?.category ?? '');
     _priceController = TextEditingController(text: p != null ? p.wholesalePrice.toStringAsFixed(0) : '');
     _moqController = TextEditingController(text: p != null ? '${p.moq}' : '');
@@ -61,23 +64,37 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   String? _numberField(String? value) {
     if (value == null || value.trim().isEmpty) return 'Required';
-    if (double.tryParse(value) == null) return 'Enter a valid number';
+    final n = double.tryParse(value);
+    if (n == null || n < 0) return 'Enter a valid number';
     return null;
   }
 
-  void _handleSave() {
+  Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    final product = WholesalerProductModel(
-      id: widget.existingProduct?.id ?? 'wp${DateTime.now().millisecondsSinceEpoch}',
-      name: _nameController.text.trim(),
-      category: _categoryController.text.trim(),
-      wholesalePrice: double.parse(_priceController.text),
-      moq: int.parse(_moqController.text),
-      availableQuantity: int.parse(_quantityController.text),
-      shelfLife: _shelfLifeController.text.trim(),
-      isActive: _isActive,
-    );
-    Navigator.of(context).pop(product);
+    setState(() => _isSaving = true);
+    try {
+      final product = WholesalerProductModel(
+        id: widget.existingProduct?.id ?? '',
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _categoryController.text.trim(),
+        wholesalePrice: double.parse(_priceController.text),
+        moq: double.parse(_moqController.text).round(),
+        availableQuantity: double.parse(_quantityController.text).round(),
+        shelfLife: _shelfLifeController.text.trim(),
+        isActive: _isActive,
+      );
+      await ProductService.instance.saveProduct(product);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save the product. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -93,15 +110,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Product image placeholder — no image picker wired up in
-                // Phase 1; would connect to Firebase Storage later
-                // (Master Prompt section 10).
+                // Image upload needs Firebase Storage (paid plan) — skipped for now.
                 Container(
                   height: 120,
                   decoration: BoxDecoration(
                     color: AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                    border: Border.all(color: AppColors.border),
                   ),
                   alignment: Alignment.center,
                   child: Column(
@@ -109,7 +124,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     children: const [
                       Icon(Icons.add_a_photo_outlined, color: AppColors.primary, size: 28),
                       SizedBox(height: 6),
-                      Text('Add Product Image', style: AppTextStyles.caption),
+                      Text('Product image (coming soon)', style: AppTextStyles.caption),
                     ],
                   ),
                 ),
@@ -124,7 +139,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   children: [
                     Expanded(
                       child: CustomTextField(
-                        label: 'Wholesale Price (৳)',
+                        label: 'Unit Price (৳)',
                         controller: _priceController,
                         keyboardType: TextInputType.number,
                         validator: _numberField,
@@ -181,9 +196,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Supplier: ${WholesalerMockDataService.currentWholesaler.businessName}',
-                  style: AppTextStyles.caption,
+                StreamBuilder<UserModel>(
+                  stream: _userStream,
+                  builder: (context, snapshot) {
+                    final u = snapshot.data;
+                    return Text('Supplier: ${u?.businessName ?? u?.displayName ?? '—'}',
+                        style: AppTextStyles.caption);
+                  },
                 ),
                 const SizedBox(height: 28),
                 Row(
@@ -192,13 +211,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       child: CustomButton(
                         label: 'Cancel',
                         variant: CustomButtonVariant.outline,
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: CustomButton(
                         label: widget.isEditing ? 'Save Changes' : 'Save Product',
+                        isLoading: _isSaving,
                         onPressed: _handleSave,
                       ),
                     ),
