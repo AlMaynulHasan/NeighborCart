@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/utils/price_break.dart';
 import '../core/utils/stream_utils.dart';
@@ -58,6 +60,52 @@ class PoolService {
           PoolView(pool: p, priceBreak: PriceBreak.compute(tiers, p.collectiveValue)),
       ],
     );
+  }
+
+  /// Creates a pool. The creator becomes its first member and coordinator,
+  /// and it becomes their active pool. Returns the new pool id.
+  Future<String> createPool({
+    required String name,
+    required String pickupLocation,
+    required DateTime deadline,
+  }) async {
+    final uid = AuthService.instance.currentUser!.uid;
+    final poolRef = _db.collection('pools').doc();
+    final userRef = _db.collection('users').doc(uid);
+    final memberRef = poolRef.collection('pool_members').doc(uid);
+
+    await _db.runTransaction((tx) async {
+      final userSnap = await tx.get(userRef);
+      final userName = (userSnap.data()?['name'] as String?) ?? 'Neighbor';
+      tx.set(poolRef, {
+        'name': name,
+        'pickupLocation': pickupLocation,
+        'deadline': Timestamp.fromDate(deadline),
+        'coordinatorUid': uid,
+        'coordinatorName': userName,
+        'orderNumber': 100 + Random().nextInt(900),
+        'memberCount': 1,
+        'collectiveValue': 0,
+        'demand': <String, dynamic>{},
+        'status': 'open',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      tx.set(memberRef, {
+        'name': userName,
+        'role': 'coordinator',
+        'joinedAt': FieldValue.serverTimestamp(),
+      });
+      tx.set(
+        userRef,
+        {
+          'activePoolId': poolRef.id,
+          'joinedPoolIds': FieldValue.arrayUnion([poolRef.id]),
+        },
+        SetOptions(merge: true),
+      );
+    });
+    return poolRef.id;
   }
 
   /// Joins the pool (once) and makes it the user's active pool.

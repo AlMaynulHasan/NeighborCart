@@ -44,8 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTabBody() {
     switch (_currentTab) {
       case AppTab.home:
-        return _HomeTabContent(
-            onFindPool: () => setState(() => _currentTab = AppTab.pools));
+        return _HomeTabContent(onFindPool: () => setState(() => _currentTab = AppTab.pools));
       case AppTab.pools:
         return const NearbyPoolsScreen();
       case AppTab.cart:
@@ -122,8 +121,7 @@ class _HomeTabContent extends StatelessWidget {
                       children: [
                         Text('Welcome back', style: AppTextStyles.subtitle),
                         const SizedBox(height: 2),
-                        Text('${_greeting()}, ${user.firstName} 👋',
-                            style: AppTextStyles.heading2),
+                        Text('${_greeting()}, ${user.firstName} 👋', style: AppTextStyles.heading2),
                       ],
                     ),
                   ),
@@ -140,8 +138,7 @@ class _HomeTabContent extends StatelessWidget {
               else
                 _ActivePoolCard(
                   poolView: poolView,
-                  savings:
-                      subtotal - poolView.priceBreak.applyDiscount(subtotal),
+                  savings: subtotal - poolView.priceBreak.applyDiscount(subtotal),
                 ),
               const SizedBox(height: 28),
               Row(
@@ -150,13 +147,10 @@ class _HomeTabContent extends StatelessWidget {
                   Text('Recommended Items', style: AppTextStyles.title),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => const AllProductsScreen()),
+                      MaterialPageRoute(builder: (_) => const AllProductsScreen()),
                     ),
-                    style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary),
-                    child: const Text('View All',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
+                    style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                    child: const Text('View All', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -168,8 +162,7 @@ class _HomeTabContent extends StatelessWidget {
                   builder: (context, products) {
                     if (products.isEmpty) {
                       return Center(
-                        child: Text('No products available yet.',
-                            style: AppTextStyles.bodySecondary),
+                        child: Text('No products available yet.', style: AppTextStyles.bodySecondary),
                       );
                     }
                     return ListView.separated(
@@ -207,22 +200,16 @@ class _NoPoolCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadow, blurRadius: 14, offset: Offset(0, 6))
-        ],
+        boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 14, offset: Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('No active pool yet',
-              style: AppTextStyles.title.copyWith(fontSize: 19)),
+          Text('No active pool yet', style: AppTextStyles.title.copyWith(fontSize: 19)),
           const SizedBox(height: 6),
-          Text('Join a nearby pool to start saving on your groceries.',
-              style: AppTextStyles.bodySecondary),
+          Text('Join a nearby pool to start saving on your groceries.', style: AppTextStyles.bodySecondary),
           const SizedBox(height: 16),
-          ElevatedButton(
-              onPressed: onFindPool, child: const Text('Find a Pool')),
+          ElevatedButton(onPressed: onFindPool, child: const Text('Find a Pool')),
         ],
       ),
     );
@@ -246,10 +233,7 @@ class _ActivePoolCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadow, blurRadius: 14, offset: Offset(0, 6))
-        ],
+        boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 14, offset: Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,8 +241,7 @@ class _ActivePoolCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: AppColors.primarySoft,
                   borderRadius: BorderRadius.circular(20),
@@ -275,8 +258,7 @@ class _ActivePoolCard extends StatelessWidget {
               const Spacer(),
               if (pool.extraMembers > 0)
                 Text('+${pool.extraMembers}',
-                    style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary, fontWeight: FontWeight.w700)),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 10),
@@ -297,9 +279,7 @@ class _ActivePoolCard extends StatelessWidget {
                       unlocked == null
                           ? 'No discount yet'
                           : '${pb.discountPercent.round()}% Off (${unlocked.label})',
-                      style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary),
+                      style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary),
                     ),
                   ],
                 ),
@@ -311,9 +291,7 @@ class _ActivePoolCard extends StatelessWidget {
                     Text('YOUR SAVINGS', style: AppTextStyles.caption),
                     const SizedBox(height: 4),
                     Text(formatTaka(savings),
-                        style: AppTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary)),
+                        style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),
                   ],
                 ),
               ),
@@ -324,16 +302,11 @@ class _ActivePoolCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                unlocked == null
-                    ? 'No tier unlocked'
-                    : '${unlocked.label} (${unlocked.discountPercent.round()}% off)',
-                style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primary, fontWeight: FontWeight.w700),
+                unlocked == null ? 'No tier unlocked' : '${unlocked.label} (${unlocked.discountPercent.round()}% off)',
+                style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
               ),
               Text(
-                next == null
-                    ? 'All tiers unlocked'
-                    : 'Next: ${next.label} (${next.discountPercent.round()}% off)',
+                next == null ? 'All tiers unlocked' : 'Next: ${next.label} (${next.discountPercent.round()}% off)',
                 style: AppTextStyles.caption,
               ),
             ],
@@ -352,12 +325,9 @@ class _ActivePoolCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${formatTaka(pb.collected, commas: false)} collected',
-                  style: AppTextStyles.caption),
+              Text('${formatTaka(pb.collected, commas: false)} collected', style: AppTextStyles.caption),
               Text('${formatTaka(pb.progressTarget, commas: false)} target',
-                  style: AppTextStyles.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary)),
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             ],
           ),
           const SizedBox(height: 16),
@@ -366,8 +336,7 @@ class _ActivePoolCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => PoolDetailsScreen(poolId: pool.id)),
+                  MaterialPageRoute(builder: (_) => PoolDetailsScreen(poolId: pool.id)),
                 );
               },
               child: const Text('View Pool'),

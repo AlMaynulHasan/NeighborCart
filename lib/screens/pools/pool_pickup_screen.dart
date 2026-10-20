@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/reliability_model.dart';
 import '../../services/pickup_service.dart';
+import '../../services/reliability_service.dart';
 import '../../widgets/stream_view.dart';
 
 /// ASSUMPTION: pickup tracking wasn't designed in Figma — a simple screen in
@@ -365,6 +367,8 @@ class _MemberRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    Text('  •  ', style: AppTextStyles.caption),
+                    _ScoreText(uid: member.uid),
                   ],
                 ),
               ],
@@ -391,6 +395,32 @@ class _MemberRow extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// "Score 92" / "New" next to a member's name (cached lookup).
+class _ScoreText extends StatelessWidget {
+  final String uid;
+  const _ScoreText({required this.uid});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ReliabilityScore>(
+      future: ReliabilityService.instance.getScore(uid),
+      builder: (context, snapshot) {
+        final r = snapshot.data;
+        if (r == null) return Text('...', style: AppTextStyles.caption);
+        final score = r.score;
+        if (score == null) return Text('New member', style: AppTextStyles.caption);
+        return Text(
+          'Score $score',
+          style: AppTextStyles.caption.copyWith(
+            color: score >= 75 ? AppColors.primary : AppColors.warning,
+            fontWeight: FontWeight.w700,
+          ),
+        );
+      },
     );
   }
 }

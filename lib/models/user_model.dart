@@ -12,6 +12,7 @@ class UserModel {
   final String? contactName; // wholesaler
   final String? activePoolId;
   final List<String> joinedPoolIds;
+  final int householdSize; // used for basket suggestions
 
   const UserModel({
     required this.id,
@@ -23,6 +24,7 @@ class UserModel {
     this.contactName,
     this.activePoolId,
     this.joinedPoolIds = const [],
+    this.householdSize = 4,
   });
 
   factory UserModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -37,6 +39,7 @@ class UserModel {
       contactName: d['contactName'] as String?,
       activePoolId: d['activePoolId'] as String?,
       joinedPoolIds: List<String>.from((d['joinedPoolIds'] as List<dynamic>?) ?? const []),
+      householdSize: (d['householdSize'] as num?)?.toInt() ?? 4,
     );
   }
 

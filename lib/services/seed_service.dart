@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/utils/shelf_life.dart';
 import 'pricing_service.dart';
 
 class _SeedProduct {
@@ -6,9 +7,10 @@ class _SeedProduct {
   final double price;
   final int moq, stock;
   final bool active;
+  final int unitDays; // days one unit lasts for one person
   const _SeedProduct(this.id, this.name, this.description, this.category, this.price,
       this.moq, this.stock, this.shelfLife,
-      {this.active = true});
+      {this.active = true, required this.unitDays});
 }
 
 /// DEV ONLY — loads demo data so a fresh Firestore isn't empty.
@@ -20,12 +22,12 @@ class SeedService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static const _catalog = [
-    _SeedProduct('seed_rice', 'Miniket Rice 5kg', 'Premium polished grains', 'Grains', 380, 5, 220, '12 months'),
-    _SeedProduct('seed_lentils', 'Red Lentils 2kg', 'Deshi moshur dal', 'Pulses', 260, 4, 180, '9 months'),
-    _SeedProduct('seed_oil', 'Soybean Oil 5L', 'Rupchanda premium oil', 'Cooking Oil', 820, 3, 30, '18 months'),
-    _SeedProduct('seed_onion', 'Onion 3kg', 'Local organic red onions', 'Vegetables', 220, 5, 210, '2 months'),
-    _SeedProduct('seed_sugar', 'Sugar 2kg', 'Refined white sugar', 'Grocery', 170, 4, 3, '24 months'),
-    _SeedProduct('seed_turmeric', 'Turmeric Powder 500g', 'Ground turmeric', 'Spices', 130, 3, 120, '12 months', active: false),
+    _SeedProduct('seed_rice', 'Miniket Rice 5kg', 'Premium polished grains', 'Grains', 380, 5, 220, '12 months', unitDays: 25),
+    _SeedProduct('seed_lentils', 'Red Lentils 2kg', 'Deshi moshur dal', 'Pulses', 260, 4, 180, '9 months', unitDays: 20),
+    _SeedProduct('seed_oil', 'Soybean Oil 5L', 'Rupchanda premium oil', 'Cooking Oil', 820, 3, 30, '18 months', unitDays: 60),
+    _SeedProduct('seed_onion', 'Onion 3kg', 'Local organic red onions', 'Vegetables', 220, 5, 210, '2 months', unitDays: 21),
+    _SeedProduct('seed_sugar', 'Sugar 2kg', 'Refined white sugar', 'Grocery', 170, 4, 3, '24 months', unitDays: 45),
+    _SeedProduct('seed_turmeric', 'Turmeric Powder 500g', 'Ground turmeric', 'Spices', 130, 3, 120, '12 months', active: false, unitDays: 120),
   ];
 
   _SeedProduct _p(String id) => _catalog.firstWhere((p) => p.id == id);
@@ -49,7 +51,18 @@ class SeedService {
     var created = 0;
     for (final p in _catalog) {
       final ref = _db.collection('products').doc(p.id);
-      if ((await ref.get()).exists) continue;
+      final existing = await ref.get();
+      if (existing.exists) {
+        // Older demo products: add the new shelf-life / usage fields.
+        if (existing.data()?['unitLastsDays'] == null) {
+          await ref.update({
+            'shelfLifeDays': parseShelfLifeDays(p.shelfLife),
+            'unitLastsDays': p.unitDays,
+          });
+          created++;
+        }
+        continue;
+      }
       await ref.set({
         'name': p.name,
         'description': p.description,
@@ -58,6 +71,8 @@ class SeedService {
         'moq': p.moq,
         'availableQuantity': p.stock,
         'shelfLife': p.shelfLife,
+        'shelfLifeDays': parseShelfLifeDays(p.shelfLife),
+        'unitLastsDays': p.unitDays,
         'isActive': p.active,
         'wholesalerUid': uid,
         'createdAt': FieldValue.serverTimestamp(),

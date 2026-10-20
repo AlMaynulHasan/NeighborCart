@@ -166,6 +166,11 @@ class PickupService {
     final pickupsSnap = await poolRef.collection('pickups').get();
 
     final members = _buildMembers(uid, pool.coordinatorUid, membersSnap, paymentsSnap, pickupsSnap);
+    // Members who actually put something in their cart this cycle.
+    final orderedUids = {
+      for (final d in cartsSnap.docs)
+        if (((d.data()['items'] as List<dynamic>?) ?? const []).isNotEmpty) d.id,
+    };
     final idx = members.indexWhere((m) => m.uid == pool.coordinatorUid);
     final next = members.isEmpty ? null : members[(idx + 1) % members.length];
 
@@ -182,11 +187,34 @@ class PickupService {
       'collectiveValue': pool.collectiveValue,
       'completedAt': FieldValue.serverTimestamp(),
       'members': [
-        for (final m in members) {'uid': m.uid, 'name': m.name, 'paid': m.paid, 'pickedUp': m.pickedUp},
+        for (final m in members)
+          {
+            'uid': m.uid,
+            'name': m.name,
+            'ordered': orderedUids.contains(m.uid),
+            'paid': m.paid,
+            'pickedUp': m.pickedUp,
+          },
       ],
     });
     for (final d in [...cartsSnap.docs, ...paymentsSnap.docs, ...pickupsSnap.docs]) {
       batch.delete(d.reference);
+    }
+    // Reliability record: +1 completed order for everyone who ordered, plus
+    // whether they paid and collected. (One batch holds at most 500 writes,
+    // which is plenty for pools of up to ~100 members.)
+    for (final m in members) {
+      if (!orderedUids.contains(m.uid) || m.uid.startsWith('seed_')) continue;
+      batch.set(
+        _db.collection('users').doc(m.uid).collection('reliability').doc('summary'),
+        {
+          'cycles': FieldValue.increment(1),
+          'paid': FieldValue.increment(m.paid ? 1 : 0),
+          'pickedUp': FieldValue.increment(m.pickedUp ? 1 : 0),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     }
     batch.update(poolRef, {
       'status': 'open',

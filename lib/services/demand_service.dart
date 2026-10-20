@@ -89,7 +89,7 @@ class DemandService {
         moqStatus: moqReached ? MoqStatus.reached : MoqStatus.notReached,
         status: !moqReached
             ? DemandOrderStatus.awaitingMoq
-            : (pool.isClosed ? DemandOrderStatus.processing : DemandOrderStatus.ready),
+            : (pool.status == 'open' ? DemandOrderStatus.ready : DemandOrderStatus.processing),
       ));
     }
 

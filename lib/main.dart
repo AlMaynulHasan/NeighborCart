@@ -37,8 +37,7 @@ class NeighborCartApp extends StatelessWidget {
         AppConstants.routeLogin: (_) => const LoginScreen(),
         AppConstants.routeSignup: (_) => const SignupScreen(),
         AppConstants.routeHome: (_) => const HomeScreen(),
-        AppConstants.routeWholesalerLogin: (_) =>
-            const LoginScreen(initialMode: AuthMode.wholesaler),
+        AppConstants.routeWholesalerLogin: (_) => const LoginScreen(initialMode: AuthMode.wholesaler),
       },
     );
   }

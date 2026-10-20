@@ -10,6 +10,7 @@ import '../../widgets/quantity_stepper.dart';
 import '../../widgets/stream_view.dart';
 import '../home/all_products_screen.dart';
 import '../settlement/settlement_screen.dart';
+import 'basket_suggestions_screen.dart';
 
 /// Matches Figma screen 5 ("Weekly Cart").
 class WeeklyCartScreen extends StatelessWidget {
@@ -59,12 +60,28 @@ class WeeklyCartScreen extends StatelessWidget {
                                   style: ElevatedButton.styleFrom(minimumSize: const Size(180, 46)),
                                   child: const Text('Browse Products'),
                                 ),
+                                const SizedBox(height: 8),
+                                OutlinedButton(
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const BasketSuggestionsScreen()),
+                                  ),
+                                  style: OutlinedButton.styleFrom(minimumSize: const Size(180, 46)),
+                                  child: const Text('Get basket suggestions'),
+                                ),
                               ],
                             ),
                           )
                         : ListView(
                             children: [
-                              for (final item in cart.items) _CartItemRow(item: item, poolId: poolView.pool.id),
+                              if (!cart.isLocked) const _SuggestionsEntry(),
+                              if (cart.lockMessage != null) _LockedBanner(message: cart.lockMessage!),
+                              for (final item in cart.items)
+                                _CartItemRow(
+                                  item: item,
+                                  poolId: poolView.pool.id,
+                                  locked: cart.isLocked,
+                                  warning: cart.warnings[item.id],
+                                ),
                               const SizedBox(height: 4),
                               _CartSummaryCard(cart: cart, poolView: poolView),
                               const SizedBox(height: 16),
@@ -98,7 +115,14 @@ class WeeklyCartScreen extends StatelessWidget {
 class _CartItemRow extends StatelessWidget {
   final ProductModel item;
   final String poolId;
-  const _CartItemRow({required this.item, required this.poolId});
+  final bool locked;
+  final String? warning;
+  const _CartItemRow({
+    required this.item,
+    required this.poolId,
+    required this.locked,
+    this.warning,
+  });
 
   void _change(BuildContext context, int delta) {
     CartService.instance
@@ -144,14 +168,39 @@ class _CartItemRow extends StatelessWidget {
                     style: AppTextStyles.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text(formatTaka(item.subtotal), style: AppTextStyles.priceSmall),
+                if (warning != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.warning),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(warning!,
+                            style: AppTextStyles.caption.copyWith(color: AppColors.warning, fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-          QuantityStepper(
-            quantity: item.quantity,
-            onIncrement: () => _change(context, 1),
-            onDecrement: () => _change(context, -1),
-          ),
+          if (locked)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.scaffoldBackground,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text('Qty: ${item.quantity}',
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700)),
+            )
+          else
+            QuantityStepper(
+              quantity: item.quantity,
+              onIncrement: () => _change(context, 1),
+              onDecrement: () => _change(context, -1),
+            ),
         ],
       ),
     );
@@ -243,6 +292,74 @@ class _CartSummaryCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LockedBanner extends StatelessWidget {
+  final String message;
+  const _LockedBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warningSoft,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.warning),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(message,
+                style: AppTextStyles.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionsEntry extends StatelessWidget {
+  const _SuggestionsEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const BasketSuggestionsScreen()),
+        ),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.lightbulb_outline_rounded, color: AppColors.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Smart basket suggestions',
+                        style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    Text('How much your household needs, based on shelf life.', style: AppTextStyles.caption),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+            ],
+          ),
+        ),
       ),
     );
   }

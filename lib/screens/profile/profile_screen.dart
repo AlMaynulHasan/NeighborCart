@@ -3,8 +3,10 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/auth_mode.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/reliability_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/reliability_service.dart';
 import '../../services/seed_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/stream_view.dart';
@@ -53,7 +55,9 @@ class ProfileScreen extends StatelessWidget {
               Text(user.displayName, style: AppTextStyles.heading2.copyWith(fontSize: 20)),
               const SizedBox(height: 4),
               Text(user.emailOrPhone, style: AppTextStyles.bodySecondary),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
+              _ReliabilityCard(uid: user.id),
+              const SizedBox(height: 24),
               for (final option in _options) _ProfileOptionTile(icon: option.icon, label: option.label),
               const SizedBox(height: 6),
               _ProfileOptionTile(
@@ -144,6 +148,127 @@ class _ProfileOptionTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// ASSUMPTION: the reliability score has no Figma design — a simple card in
+/// the same style. Score = weighted payment + pickup rate over completed
+/// orders (weights live in Firestore `config/reliability`, default 50/50).
+class _ReliabilityCard extends StatelessWidget {
+  final String uid;
+  const _ReliabilityCard({required this.uid});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamView<ReliabilityScore>(
+      create: () => ReliabilityService.instance.watchScore(uid),
+      builder: (context, r) {
+        final score = r.score;
+        final total = r.weights.payment + r.weights.pickup;
+        final payPct = total <= 0 ? 0 : (r.weights.payment / total * 100).round();
+        final pickPct = total <= 0 ? 0 : (r.weights.pickup / total * 100).round();
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 3))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox.expand(
+                          child: CircularProgressIndicator(
+                            value: (score ?? 0) / 100,
+                            strokeWidth: 6,
+                            backgroundColor: AppColors.border,
+                            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                          ),
+                        ),
+                        Text(
+                          score == null ? '--' : '$score',
+                          style: AppTextStyles.heading2.copyWith(fontSize: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Reliability score', style: AppTextStyles.caption),
+                        const SizedBox(height: 2),
+                        Text(r.label,
+                            style: AppTextStyles.body.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: score == null ? AppColors.textSecondary : AppColors.primary)),
+                        const SizedBox(height: 2),
+                        Text(
+                          score == null
+                              ? 'Appears after your first completed pool order.'
+                              : 'Based on ${r.cycles} completed ${r.cycles == 1 ? 'order' : 'orders'}.',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (score != null) ...[
+                const SizedBox(height: 14),
+                _RateRow(label: 'Payments ($payPct% of score)', done: r.paid, of: r.cycles),
+                const SizedBox(height: 8),
+                _RateRow(label: 'Pickups ($pickPct% of score)', done: r.pickedUp, of: r.cycles),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RateRow extends StatelessWidget {
+  final String label;
+  final int done;
+  final int of;
+  const _RateRow({required this.label, required this.done, required this.of});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: AppTextStyles.caption),
+            Text('$done / $of', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: of == 0 ? 0 : done / of,
+            minHeight: 6,
+            backgroundColor: AppColors.border,
+            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+          ),
+        ),
+      ],
     );
   }
 }

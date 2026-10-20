@@ -56,8 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  String? _requiredField(String? value) =>
-      (value == null || value.trim().isEmpty) ? 'Required' : null;
+  String? _requiredField(String? value) => (value == null || value.trim().isEmpty) ? 'Required' : null;
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) return 'Please confirm your password';
@@ -106,9 +105,7 @@ class _SignupScreenState extends State<SignupScreen> {
     // extra OAuth client setup for Flutter Web). Email/Password sign-up is
     // fully wired to Firebase now.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text(
-              'Google sign-in is not available yet. Please use your email and password.')),
+      const SnackBar(content: Text('Google sign-in is not available yet. Please use your email and password.')),
     );
   }
 
@@ -127,8 +124,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   alignment: Alignment.centerLeft,
                   child: IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded,
-                        color: AppColors.textPrimary),
+                    icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -137,15 +133,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 88,
                     width: 88,
                     decoration: BoxDecoration(
-                      color: _isWholesaler
-                          ? AppColors.textPrimary
-                          : AppColors.primary,
+                      color: _isWholesaler ? AppColors.textPrimary : AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _isWholesaler
-                          ? Icons.storefront_rounded
-                          : Icons.shopping_cart_rounded,
+                      _isWholesaler ? Icons.storefront_rounded : Icons.shopping_cart_rounded,
                       color: Colors.white,
                       size: 40,
                     ),
@@ -155,8 +147,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 Text(
                   _isWholesaler ? 'Create Business Account' : 'Create Account',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.heading1
-                      .copyWith(color: AppColors.primary, fontSize: 26),
+                  style: AppTextStyles.heading1.copyWith(color: AppColors.primary, fontSize: 26),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -165,8 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: AppTextStyles.subtitle,
                 ),
                 const SizedBox(height: 22),
-                AuthModeToggle(
-                    mode: _mode, onChanged: (m) => setState(() => _mode = m)),
+                AuthModeToggle(mode: _mode, onChanged: (m) => setState(() => _mode = m)),
                 const SizedBox(height: 28),
                 if (_isWholesaler) ...[
                   CustomTextField(
@@ -210,13 +200,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   validator: Validators.password,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -227,13 +214,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   validator: _validateConfirmPassword,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                      _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                       color: AppColors.textSecondary,
                     ),
-                    onPressed: () => setState(() =>
-                        _obscureConfirmPassword = !_obscureConfirmPassword),
+                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   ),
                 ),
                 const SizedBox(height: 26),
@@ -266,17 +250,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 Center(
                   child: RichText(
                     text: TextSpan(
-                      style: AppTextStyles.body
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
                       children: [
                         const TextSpan(text: 'Already have an account? '),
                         TextSpan(
                           text: 'Login',
-                          style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => Navigator.of(context).pop(),
+                          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                          recognizer: TapGestureRecognizer()..onTap = () => Navigator.of(context).pop(),
                         ),
                       ],
                     ),

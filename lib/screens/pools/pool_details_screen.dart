@@ -10,6 +10,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/stream_view.dart';
 import '../../widgets/tier_card.dart';
 import '../home/home_screen.dart';
+import 'pool_pickup_screen.dart';
 
 /// Matches Figma screen 4 ("Pool Details").
 class PoolDetailsScreen extends StatefulWidget {
@@ -137,7 +138,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                             children: [
                               Text('Pool Coordinator', style: AppTextStyles.caption),
                               const SizedBox(height: 2),
-                              Text(pool.coordinatorName,
+                              Text(pool.coordinatorUid == user.id ? '${pool.coordinatorName} (You)' : pool.coordinatorName,
                                   style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
                             ],
                           ),
@@ -215,6 +216,16 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                       ),
                     ],
                   ),
+                  if (isMember) ...[
+                    const SizedBox(height: 20),
+                    _PickupEntryCard(
+                      isCoordinator: pool.coordinatorUid == user.id,
+                      statusLabel: pool.statusLabel,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => PoolPickupScreen(poolId: pool.id)),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   ElevatedButton(
                     onPressed: _isJoining ? null : _joinAndShop,
@@ -230,6 +241,51 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _PickupEntryCard extends StatelessWidget {
+  final bool isCoordinator;
+  final String statusLabel;
+  final VoidCallback onTap;
+
+  const _PickupEntryCard({
+    required this.isCoordinator,
+    required this.statusLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.primary, width: 1.2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.local_shipping_outlined, color: AppColors.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(isCoordinator ? 'Coordinator tools' : 'Pickup status',
+                      style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+                  Text(statusLabel, style: AppTextStyles.caption),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+          ],
         ),
       ),
     );

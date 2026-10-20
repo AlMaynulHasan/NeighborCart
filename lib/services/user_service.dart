@@ -11,4 +11,13 @@ class UserService {
     final uid = AuthService.instance.currentUser!.uid;
     return _db.collection('users').doc(uid).snapshots().map(UserModel.fromDoc);
   }
+
+  Future<void> setHouseholdSize(int size) {
+    final uid = AuthService.instance.currentUser!.uid;
+    final clamped = size < 1 ? 1 : (size > 12 ? 12 : size);
+    return _db
+        .collection('users')
+        .doc(uid)
+        .set({'householdSize': clamped}, SetOptions(merge: true));
+  }
 }

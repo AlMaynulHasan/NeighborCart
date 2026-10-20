@@ -4,12 +4,14 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/utils/stream_utils.dart';
 import '../../../models/user_model.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/demand_service.dart';
 import '../../../services/user_service.dart';
 import '../../../widgets/stream_view.dart';
 import '../../../widgets/wholesaler/demand_order_card.dart';
 import '../../../widgets/wholesaler/stat_card.dart';
 import '../../../widgets/wholesaler/wholesaler_bottom_nav.dart';
+import '../../auth/login_screen.dart';
 import '../alerts/alerts_screen.dart';
 import '../orders/demand_screen.dart';
 import '../pricing/pricing_management_screen.dart';
@@ -45,6 +47,8 @@ class _WholesalerDashboardScreenState extends State<WholesalerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Safety net: without a signed-in user every tab would fail.
+    if (AuthService.instance.currentUser == null) return const LoginScreen();
     return Scaffold(
       body: SafeArea(child: _buildTabBody()),
       bottomNavigationBar: WholesalerBottomNav(

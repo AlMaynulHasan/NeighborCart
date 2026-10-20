@@ -7,6 +7,7 @@ import '../../services/pool_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/pool_card.dart';
 import '../../widgets/stream_view.dart';
+import 'create_pool_screen.dart';
 import 'pool_details_screen.dart';
 
 /// Matches Figma screen 3 ("Nearby Pools").
@@ -42,7 +43,22 @@ class _NearbyPoolsScreenState extends State<NearbyPoolsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Nearby Pools', style: AppTextStyles.heading2.copyWith(fontSize: 24)),
+          Row(
+            children: [
+              Expanded(child: Text('Nearby Pools', style: AppTextStyles.heading2.copyWith(fontSize: 24))),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CreatePoolScreen()),
+                ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Create'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _searchController,

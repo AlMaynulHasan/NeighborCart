@@ -28,6 +28,7 @@ class PoolModel {
   final DateTime deadline;
   final DateTime? updatedAt;
   final Map<String, PoolDemandItem> demand;
+  final String status; // open | ordered | ready
 
   const PoolModel({
     required this.id,
@@ -41,6 +42,7 @@ class PoolModel {
     required this.deadline,
     required this.updatedAt,
     required this.demand,
+    this.status = 'open',
   });
 
   factory PoolModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -70,11 +72,33 @@ class PoolModel {
       deadline: (d['deadline'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
       demand: demand,
+      status: (d['status'] as String?) ?? 'open',
     );
   }
 
+  /// Deadline passed (regardless of status).
   bool get isClosed => deadline.isBefore(DateTime.now());
-  String get closesLabel => isClosed ? 'Closed' : formatClosesShort(deadline);
+
+  /// Members can only change carts while the pool is open and before the deadline.
+  bool get isOrderingClosed => status != 'open' || isClosed;
+
+  String get statusLabel {
+    switch (status) {
+      case 'ordered':
+        return 'Order placed';
+      case 'ready':
+        return 'Ready for pickup';
+      default:
+        return 'Ordering open';
+    }
+  }
+
+  String get closesLabel {
+    if (status == 'ordered') return 'Order placed';
+    if (status == 'ready') return 'Ready for pickup';
+    return isClosed ? 'Closed' : formatClosesShort(deadline);
+  }
+
   String get deadlineLabel => formatDeadlineLong(deadline);
 
   /// The "+N" shown next to the avatar stack (3 avatars are drawn).

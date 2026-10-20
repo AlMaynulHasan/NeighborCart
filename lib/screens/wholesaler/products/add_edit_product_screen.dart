@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/shelf_life.dart';
 import '../../../models/user_model.dart';
 import '../../../models/wholesaler_product_model.dart';
 import '../../../services/product_service.dart';
@@ -30,6 +31,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late final TextEditingController _moqController;
   late final TextEditingController _quantityController;
   late final TextEditingController _shelfLifeController;
+  late final TextEditingController _unitLastsController;
   late bool _isActive;
   bool _isSaving = false;
   late final Stream<UserModel> _userStream = UserService.instance.watchCurrentUser();
@@ -45,6 +47,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _moqController = TextEditingController(text: p != null ? '${p.moq}' : '');
     _quantityController = TextEditingController(text: p != null ? '${p.availableQuantity}' : '');
     _shelfLifeController = TextEditingController(text: p?.shelfLife ?? '');
+    _unitLastsController = TextEditingController(text: p?.unitLastsDays != null ? '${p!.unitLastsDays}' : '');
     _isActive = p?.isActive ?? true;
   }
 
@@ -57,6 +60,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _moqController.dispose();
     _quantityController.dispose();
     _shelfLifeController.dispose();
+    _unitLastsController.dispose();
     super.dispose();
   }
 
@@ -66,6 +70,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (value == null || value.trim().isEmpty) return 'Required';
     final n = double.tryParse(value);
     if (n == null || n < 0) return 'Enter a valid number';
+    return null;
+  }
+
+  String? _optionalDays(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final n = int.tryParse(value.trim());
+    if (n == null || n <= 0) return 'Enter a whole number of days';
     return null;
   }
 
@@ -82,6 +93,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         moq: double.parse(_moqController.text).round(),
         availableQuantity: double.parse(_quantityController.text).round(),
         shelfLife: _shelfLifeController.text.trim(),
+        shelfLifeDays: parseShelfLifeDays(_shelfLifeController.text),
+        unitLastsDays: int.tryParse(_unitLastsController.text.trim()),
         isActive: _isActive,
       );
       await ProductService.instance.saveProduct(product);
@@ -177,6 +190,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'One unit lasts (days, per person)',
+                  hint: 'Optional, e.g. 25 — used for basket suggestions',
+                  controller: _unitLastsController,
+                  keyboardType: TextInputType.number,
+                  validator: _optionalDays,
                 ),
                 const SizedBox(height: 16),
                 Container(

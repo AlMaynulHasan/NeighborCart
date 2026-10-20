@@ -10,6 +10,8 @@ class WholesalerProductModel {
   final int moq; // minimum order quantity
   final int availableQuantity;
   final String shelfLife; // e.g. "6 months"
+  final int? shelfLifeDays; // parsed from shelfLife, used for basket suggestions
+  final int? unitLastsDays; // days one unit lasts for one person (optional)
   final bool isActive;
 
   const WholesalerProductModel({
@@ -21,6 +23,8 @@ class WholesalerProductModel {
     required this.moq,
     required this.availableQuantity,
     required this.shelfLife,
+    this.shelfLifeDays,
+    this.unitLastsDays,
     required this.isActive,
   });
 
@@ -35,6 +39,8 @@ class WholesalerProductModel {
       moq: (d['moq'] as num?)?.toInt() ?? 0,
       availableQuantity: (d['availableQuantity'] as num?)?.toInt() ?? 0,
       shelfLife: (d['shelfLife'] as String?) ?? '',
+      shelfLifeDays: (d['shelfLifeDays'] as num?)?.toInt(),
+      unitLastsDays: (d['unitLastsDays'] as num?)?.toInt(),
       isActive: (d['isActive'] as bool?) ?? true,
     );
   }
@@ -47,6 +53,8 @@ class WholesalerProductModel {
         'moq': moq,
         'availableQuantity': availableQuantity,
         'shelfLife': shelfLife,
+        'shelfLifeDays': shelfLifeDays,
+        'unitLastsDays': unitLastsDays,
         'isActive': isActive,
       };
 
@@ -71,6 +79,8 @@ class WholesalerProductModel {
       moq: moq ?? this.moq,
       availableQuantity: availableQuantity ?? this.availableQuantity,
       shelfLife: shelfLife ?? this.shelfLife,
+      shelfLifeDays: shelfLifeDays,
+      unitLastsDays: unitLastsDays,
       isActive: isActive ?? this.isActive,
     );
   }

@@ -9,6 +9,8 @@ class ProductModel {
   final double price;
   final String? imageUrl;
   final int quantity; // used when the product is a cart line
+  final int? shelfLifeDays; // for basket suggestions
+  final int? unitLastsDays; // days one unit lasts for one person
 
   const ProductModel({
     required this.id,
@@ -17,6 +19,8 @@ class ProductModel {
     required this.price,
     this.imageUrl,
     this.quantity = 1,
+    this.shelfLifeDays,
+    this.unitLastsDays,
   });
 
   factory ProductModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -27,6 +31,8 @@ class ProductModel {
       description: (d['description'] as String?) ?? '',
       price: (d['wholesalePrice'] as num?)?.toDouble() ?? 0,
       imageUrl: d['imageUrl'] as String?,
+      shelfLifeDays: (d['shelfLifeDays'] as num?)?.toInt(),
+      unitLastsDays: (d['unitLastsDays'] as num?)?.toInt(),
     );
   }
 
@@ -56,6 +62,8 @@ class ProductModel {
       price: price,
       imageUrl: imageUrl,
       quantity: quantity ?? this.quantity,
+      shelfLifeDays: shelfLifeDays,
+      unitLastsDays: unitLastsDays,
     );
   }
 
