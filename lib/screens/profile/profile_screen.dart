@@ -11,6 +11,7 @@ import '../../services/seed_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/stream_view.dart';
 import '../auth/login_screen.dart';
+import 'edit_profile_screen.dart';
 
 /// ASSUMPTION: Profile wasn't one of the 6 Figma screens — simple avatar,
 /// name, and account option list in the same visual language.
@@ -58,7 +59,16 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _ReliabilityCard(uid: user.id),
               const SizedBox(height: 24),
-              for (final option in _options) _ProfileOptionTile(icon: option.icon, label: option.label),
+              for (final option in _options)
+                _ProfileOptionTile(
+                  icon: option.icon,
+                  label: option.label,
+                  onTap: option.label == 'Personal Information'
+                      ? () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)),
+                          )
+                      : null,
+                ),
               const SizedBox(height: 6),
               _ProfileOptionTile(
                 icon: Icons.logout_rounded,

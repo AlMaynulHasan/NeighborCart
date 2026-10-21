@@ -78,6 +78,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleForgotPassword() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final email = await showDialog<String>(
+      context: context,
+      builder: (_) => _ResetPasswordDialog(initialEmail: _emailController.text.trim()),
+    );
+    if (email == null || email.isEmpty) return;
+    if (!email.contains('@')) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Enter the email you signed up with. Phone numbers are not supported yet.')),
+      );
+      return;
+    }
+    try {
+      await AuthService.instance.sendPasswordReset(email);
+      messenger.showSnackBar(
+        SnackBar(content: Text('If an account exists for $email, a reset link has been sent.')),
+      );
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(AuthService.friendlyError(e))));
+    }
+  }
+
   void _handleGoogleSignIn() {
     // Still a placeholder — real Google Sign-In needs an OAuth client ID
     // configured in Google Cloud + a <meta> tag in web/index.html for
@@ -154,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _handleForgotPassword,
                     style: TextButton.styleFrom(foregroundColor: AppColors.primary),
                     child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
@@ -209,6 +232,52 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ResetPasswordDialog extends StatefulWidget {
+  final String initialEmail;
+  const _ResetPasswordDialog({required this.initialEmail});
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  late final TextEditingController _controller = TextEditingController(text: widget.initialEmail);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reset password'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('We will email you a link to choose a new password.'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Your account email'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Send link'),
+        ),
+      ],
     );
   }
 }

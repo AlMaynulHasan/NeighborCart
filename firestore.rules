@@ -1,10 +1,199 @@
-// DEMO RULES ONLY — fully open, no expiry. Paste into Firebase Console
-// -> Firestore -> Rules. Replace with per-user rules before any real launch.
 rules_version = '2';
+
+// NeighborCart security rules.
+// Rollback: paste firestore.rules.open-demo (fully open) back into the console.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
+
+    // ---------------------------------------------------------------- helpers
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isWholesaler() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'wholesaler';
+    }
+
+    // DEMO ONLY: the "Load demo pools" button writes fake neighbors whose ids
+    // start with "seed_". Delete every isSeed(...) use before a real launch.
+    function isSeed(id) {
+      return id.matches('seed_.*');
+    }
+
+    function poolDoc(poolId) {
+      return get(/databases/$(database)/documents/pools/$(poolId));
+    }
+
+    function isMember(poolId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/pools/$(poolId)/pool_members/$(request.auth.uid));
+    }
+
+    function isCoordinator(poolId) {
+      return signedIn() && poolDoc(poolId).data.coordinatorUid == request.auth.uid;
+    }
+
+    // ------------------------------------------------------------------ users
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.role in ['customer', 'wholesaler'];
+      // the account type can never be changed after sign-up
+      allow update: if isOwner(uid)
+        && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+
+      match /orders/{poolId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Counters are written by a pool's coordinator when a cycle completes
+      // (+1 cycle, +0/1 paid, +0/1 picked up) and are readable by anyone
+      // signed in (shown next to members on the pickup screen).
+      match /reliability/{docId} {
+        allow read: if signedIn();
+
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['cycles', 'paid', 'pickedUp', 'updatedAt', 'lastPoolId'])
+          && request.resource.data.cycles == 1
+          && request.resource.data.paid in [0, 1]
+          && request.resource.data.pickedUp in [0, 1]
+          && request.resource.data.lastPoolId is string
+          && isCoordinator(request.resource.data.lastPoolId);
+
+        allow update: if signedIn()
+          && request.resource.data.keys().hasOnly(['cycles', 'paid', 'pickedUp', 'updatedAt', 'lastPoolId'])
+          && request.resource.data.cycles == resource.data.cycles + 1
+          && request.resource.data.paid - resource.data.paid in [0, 1]
+          && request.resource.data.pickedUp - resource.data.pickedUp in [0, 1]
+          && request.resource.data.lastPoolId is string
+          && isCoordinator(request.resource.data.lastPoolId);
+      }
+    }
+
+    // ------------------------------------------------------------------ pools
+    function validNewPool() {
+      let d = request.resource.data;
+      return d.coordinatorUid == request.auth.uid
+        && d.status == 'open'
+        && d.memberCount == 1
+        && d.collectiveValue == 0
+        && d.name is string && d.name.size() > 0
+        && d.pickupLocation is string
+        && d.deadline is timestamp;
+    }
+
+    // The coordinator runs the weekly cycle: place order, ready, complete.
+    function coordinatorUpdate() {
+      return resource.data.coordinatorUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'orderedAt', 'readyAt', 'deadline', 'updatedAt',
+          'collectiveValue', 'demand', 'orderNumber', 'coordinatorUid', 'coordinatorName'
+        ]);
+    }
+
+    // Joining: memberCount goes up by exactly one, in the same write that
+    // creates the caller's own member document.
+    function joinUpdate(poolId) {
+      let memberPath = /databases/$(database)/documents/pools/$(poolId)/pool_members/$(request.auth.uid);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount'])
+        && request.resource.data.memberCount == resource.data.memberCount + 1
+        && !exists(memberPath)
+        && existsAfter(memberPath);
+    }
+
+    // A member changing their cart: the pool's collectiveValue may only move
+    // by exactly the change in that member's cart subtotal, and only while the
+    // pool is open.
+    function cartUpdate(poolId) {
+      let cartPath = /databases/$(database)/documents/pools/$(poolId)/carts/$(request.auth.uid);
+      let oldSubtotal = exists(cartPath) ? get(cartPath).data.subtotal : 0;
+      let newSubtotal = getAfter(cartPath).data.subtotal;
+      let cartDelta = newSubtotal - oldSubtotal;
+      let valueDelta = request.resource.data.collectiveValue - resource.data.collectiveValue;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['collectiveValue', 'demand', 'updatedAt'])
+        && isMember(poolId)
+        && resource.data.status == 'open'
+        && resource.data.deadline > request.time
+        && valueDelta - cartDelta < 0.01
+        && cartDelta - valueDelta < 0.01;
+    }
+
+    match /pools/{poolId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && (validNewPool() || isSeed(request.resource.data.coordinatorUid));
+      allow update: if signedIn()
+        && (coordinatorUpdate() || joinUpdate(poolId) || cartUpdate(poolId));
+      allow delete: if false;
+
+      match /pool_members/{uid} {
+        allow get: if isOwner(uid) || isMember(poolId);
+        allow list: if isMember(poolId);
+        allow create: if (isOwner(uid) && request.resource.data.name is string)
+          || (signedIn() && isSeed(uid));
+        // a member may rename themselves (profile edit); nothing else changes
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+          && request.resource.data.name is string;
+        allow delete: if false;
+      }
+
+      match /carts/{uid} {
+        allow read: if isMember(poolId);
+        allow create, update: if isOwner(uid)
+          && isMember(poolId)
+          && poolDoc(poolId).data.status == 'open'
+          && poolDoc(poolId).data.deadline > request.time
+          && !exists(/databases/$(database)/documents/pools/$(poolId)/payments/$(uid))
+          && request.resource.data.items is list
+          && request.resource.data.subtotal is number;
+        allow delete: if isCoordinator(poolId);
+        allow write: if signedIn() && isSeed(uid);
+      }
+
+      match /payments/{uid} {
+        allow read: if isMember(poolId);
+        allow create: if (isOwner(uid) && isMember(poolId) && request.resource.data.amount is number)
+          || (signedIn() && isSeed(uid));
+        allow update: if false;
+        allow delete: if isCoordinator(poolId);
+      }
+
+      match /pickups/{uid} {
+        allow read: if isMember(poolId);
+        allow write: if isCoordinator(poolId);
+      }
+
+      match /cycles/{cycleId} {
+        allow read: if isMember(poolId);
+        allow write: if isCoordinator(poolId);
+      }
+    }
+
+    // --------------------------------------------------------------- products
+    match /products/{productId} {
+      allow read: if signedIn();
+      allow create: if isWholesaler()
+        && request.resource.data.wholesalerUid == request.auth.uid;
+      allow update: if isWholesaler()
+        && resource.data.wholesalerUid == request.auth.uid
+        && request.resource.data.wholesalerUid == request.auth.uid;
+      allow delete: if isWholesaler()
+        && resource.data.wholesalerUid == request.auth.uid;
+    }
+
+    // ----------------------------------------------------------------- config
+    // config/pricing is edited by wholesalers; config/reliability (weights)
+    // is edited from the Firebase console only.
+    match /config/{docId} {
+      allow read: if signedIn();
+      allow write: if docId == 'pricing' && isWholesaler();
     }
   }
 }

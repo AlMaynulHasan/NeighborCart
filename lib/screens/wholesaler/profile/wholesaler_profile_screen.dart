@@ -7,6 +7,7 @@ import '../../../services/seed_service.dart';
 import '../../../services/user_service.dart';
 import '../../../widgets/stream_view.dart';
 import '../../auth/login_screen.dart';
+import '../../profile/edit_profile_screen.dart';
 
 /// Simple wholesaler account screen — same option-list pattern as the
 /// customer ProfileScreen, kept separate per the "do not mix" rule.
@@ -57,7 +58,16 @@ class WholesalerProfileScreen extends StatelessWidget {
               if (user.contactName != null) Text(user.contactName!, style: AppTextStyles.bodySecondary),
               Text(user.emailOrPhone, style: AppTextStyles.bodySecondary),
               const SizedBox(height: 28),
-              for (final option in _options) _OptionTile(icon: option.icon, label: option.label),
+              for (final option in _options)
+                _OptionTile(
+                  icon: option.icon,
+                  label: option.label,
+                  onTap: option.label == 'Business Information'
+                      ? () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)),
+                          )
+                      : null,
+                ),
               const SizedBox(height: 6),
               _OptionTile(
                 icon: Icons.logout_rounded,

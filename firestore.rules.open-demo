@@ -1,0 +1,10 @@
+// DEMO RULES ONLY — fully open, no expiry. Paste into Firebase Console
+// -> Firestore -> Rules. Replace with per-user rules before any real launch.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

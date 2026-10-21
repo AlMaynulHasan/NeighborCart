@@ -94,6 +94,11 @@ class AuthService {
     return role == 'wholesaler' ? AuthMode.wholesaler : AuthMode.customer;
   }
 
+  /// Sends a password-reset email (Firebase does not reveal whether the
+  /// address has an account).
+  Future<void> sendPasswordReset(String email) =>
+      _auth.sendPasswordResetEmail(email: email.trim());
+
   Future<void> signOut() => _auth.signOut();
 
   /// Turns a FirebaseAuthException into a short, person-readable message.
