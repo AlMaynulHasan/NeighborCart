@@ -10,6 +10,7 @@ class UserModel {
   final AuthMode role;
   final String? businessName; // wholesaler
   final String? contactName; // wholesaler
+  final String? licenseNumber; // wholesaler trade/food licence
   final String? activePoolId;
   final List<String> joinedPoolIds;
   final int householdSize; // used for basket suggestions
@@ -22,6 +23,7 @@ class UserModel {
     this.role = AuthMode.customer,
     this.businessName,
     this.contactName,
+    this.licenseNumber,
     this.activePoolId,
     this.joinedPoolIds = const [],
     this.householdSize = 4,
@@ -37,6 +39,7 @@ class UserModel {
       role: d['role'] == 'wholesaler' ? AuthMode.wholesaler : AuthMode.customer,
       businessName: d['businessName'] as String?,
       contactName: d['contactName'] as String?,
+      licenseNumber: d['licenseNumber'] as String?,
       activePoolId: d['activePoolId'] as String?,
       joinedPoolIds: List<String>.from((d['joinedPoolIds'] as List<dynamic>?) ?? const []),
       householdSize: (d['householdSize'] as num?)?.toInt() ?? 4,

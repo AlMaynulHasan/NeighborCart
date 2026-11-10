@@ -71,7 +71,7 @@ class _BasketSuggestionsScreenState extends State<BasketSuggestionsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Household size', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
-                            Text('People you buy groceries for', style: AppTextStyles.caption),
+                            const Text('People you buy groceries for', style: AppTextStyles.caption),
                           ],
                         ),
                       ),
@@ -84,15 +84,15 @@ class _BasketSuggestionsScreenState extends State<BasketSuggestionsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
+                const Text(
                   'Suggestions cover up to ${BasketAdvisor.maxCoverDays} days and never go beyond what '
                   'your household can use before the product expires.',
                   style: AppTextStyles.caption,
                 ),
                 const SizedBox(height: 16),
                 if (data.suggestions.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 24),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 24),
                     child: Text(
                       'No products have usage data yet. Wholesalers add it when they create a product '
                       '("One unit lasts (days, per person)").',
@@ -115,7 +115,7 @@ class _BasketSuggestionsScreenState extends State<BasketSuggestionsScreen> {
                           : const Text('Add all suggested items'),
                     )
                   else
-                    Center(
+                    const Center(
                       child: Text('Your cart already covers everything. 🎉', style: AppTextStyles.bodySecondary),
                     ),
                   if (!data.hasPool) ...[

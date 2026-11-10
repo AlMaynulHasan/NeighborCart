@@ -20,6 +20,7 @@ class _CreatePoolScreenState extends State<CreatePoolScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _pickupController = TextEditingController();
+  final _areaController = TextEditingController();
   late DateTime _deadline;
   String? _deadlineError;
   bool _isSaving = false;
@@ -35,6 +36,7 @@ class _CreatePoolScreenState extends State<CreatePoolScreen> {
   void dispose() {
     _nameController.dispose();
     _pickupController.dispose();
+    _areaController.dispose();
     super.dispose();
   }
 
@@ -72,6 +74,7 @@ class _CreatePoolScreenState extends State<CreatePoolScreen> {
       final id = await PoolService.instance.createPool(
         name: _nameController.text.trim(),
         pickupLocation: _pickupController.text.trim(),
+        area: _areaController.text.trim(),
         deadline: _deadline,
       );
       if (!mounted) return;
@@ -100,7 +103,7 @@ class _CreatePoolScreenState extends State<CreatePoolScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
+                const Text(
                   'Start a pool for your street or block. You will be its coordinator '
                   'and neighbors can join it from the Pools tab.',
                   style: AppTextStyles.bodySecondary,
@@ -110,6 +113,13 @@ class _CreatePoolScreenState extends State<CreatePoolScreen> {
                   label: 'Pool Name',
                   hint: 'e.g. Station Road Pool',
                   controller: _nameController,
+                  validator: _required,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Area / Neighbourhood',
+                  hint: 'e.g. Saidpur, University Area',
+                  controller: _areaController,
                   validator: _required,
                 ),
                 const SizedBox(height: 16),

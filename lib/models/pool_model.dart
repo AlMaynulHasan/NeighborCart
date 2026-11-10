@@ -29,6 +29,10 @@ class PoolModel {
   final DateTime? updatedAt;
   final Map<String, PoolDemandItem> demand;
   final String status; // open | ordered | ready
+  final String area; // neighbourhood, used to group demand
+  final String? supplierUid; // wholesaler chosen from the bids
+  final String? supplierName;
+  final double supplierExtraPercent; // bonus discount promised in the winning bid
 
   const PoolModel({
     required this.id,
@@ -43,6 +47,10 @@ class PoolModel {
     required this.updatedAt,
     required this.demand,
     this.status = 'open',
+    this.area = '',
+    this.supplierUid,
+    this.supplierName,
+    this.supplierExtraPercent = 0,
   });
 
   factory PoolModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -73,6 +81,10 @@ class PoolModel {
       updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
       demand: demand,
       status: (d['status'] as String?) ?? 'open',
+      area: (d['area'] as String?) ?? '',
+      supplierUid: d['supplierUid'] as String?,
+      supplierName: d['supplierName'] as String?,
+      supplierExtraPercent: (d['supplierExtraPercent'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -100,6 +112,9 @@ class PoolModel {
   }
 
   String get deadlineLabel => formatDeadlineLong(deadline);
+
+  String get areaLabel => area.isEmpty ? 'Other areas' : area;
+  bool get hasSupplier => supplierUid != null;
 
   /// The "+N" shown next to the avatar stack (3 avatars are drawn).
   int get extraMembers => memberCount > 3 ? memberCount - 3 : 0;

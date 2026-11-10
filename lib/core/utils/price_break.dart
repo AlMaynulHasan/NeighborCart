@@ -8,14 +8,16 @@ import '../../models/pricing_tier_model.dart';
 class PriceBreak {
   final double collected;
   final List<PoolTier> tiers; // ascending by threshold
+  final double extraPercent; // supplier bonus from the chosen bid
 
-  const PriceBreak({required this.collected, required this.tiers});
+  const PriceBreak({required this.collected, required this.tiers, this.extraPercent = 0});
 
-  factory PriceBreak.compute(List<PricingTierModel> config, double collected) {
+  factory PriceBreak.compute(List<PricingTierModel> config, double collected, {double extraPercent = 0}) {
     final active = config.where((t) => t.isActive).toList()
       ..sort((a, b) => a.minimumThreshold.compareTo(b.minimumThreshold));
     return PriceBreak(
       collected: collected,
+      extraPercent: extraPercent,
       tiers: [
         for (final t in active)
           PoolTier(
@@ -40,7 +42,10 @@ class PriceBreak {
     return null;
   }
 
-  double get discountPercent => unlockedTier?.discountPercent ?? 0;
+  double get tierDiscountPercent => unlockedTier?.discountPercent ?? 0;
+
+  /// Tier discount plus any supplier bonus.
+  double get discountPercent => tierDiscountPercent + extraPercent;
 
   double amountNeeded(PoolTier tier) {
     final diff = tier.threshold - collected;

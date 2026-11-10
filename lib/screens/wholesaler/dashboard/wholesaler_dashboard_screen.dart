@@ -89,7 +89,7 @@ class _DashboardTabContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Welcome back', style: AppTextStyles.subtitle),
+                        const Text('Welcome back', style: AppTextStyles.subtitle),
                         const SizedBox(height: 2),
                         Text(user.displayName, style: AppTextStyles.heading2.copyWith(fontSize: 20)),
                       ],
@@ -137,17 +137,17 @@ class _DashboardTabContent extends StatelessWidget {
                 icon: Icons.trending_up_rounded,
               ),
               const SizedBox(height: 28),
-              Text('Recent Orders', style: AppTextStyles.title),
+              const Text('Recent Orders', style: AppTextStyles.title),
               const SizedBox(height: 12),
               if (overview.orders.isEmpty)
-                Text('No demand from pools yet.', style: AppTextStyles.bodySecondary)
+                const Text('No demand from pools yet.', style: AppTextStyles.bodySecondary)
               else
                 for (final order in overview.orders.take(3)) DemandOrderCard(order: order),
               const SizedBox(height: 16),
-              Text('Top Requested Products', style: AppTextStyles.title),
+              const Text('Top Requested Products', style: AppTextStyles.title),
               const SizedBox(height: 10),
               if (overview.topRequested.isEmpty)
-                Text('Nothing requested yet.', style: AppTextStyles.bodySecondary)
+                const Text('Nothing requested yet.', style: AppTextStyles.bodySecondary)
               else
                 Wrap(
                   spacing: 8,

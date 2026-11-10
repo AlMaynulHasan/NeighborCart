@@ -119,7 +119,7 @@ class _HomeTabContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Welcome back', style: AppTextStyles.subtitle),
+                        const Text('Welcome back', style: AppTextStyles.subtitle),
                         const SizedBox(height: 2),
                         Text('${_greeting()}, ${user.firstName} 👋', style: AppTextStyles.heading2),
                       ],
@@ -144,7 +144,7 @@ class _HomeTabContent extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recommended Items', style: AppTextStyles.title),
+                  const Text('Recommended Items', style: AppTextStyles.title),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const AllProductsScreen()),
@@ -161,8 +161,8 @@ class _HomeTabContent extends StatelessWidget {
                   create: () => ProductService.instance.watchActiveProducts(),
                   builder: (context, products) {
                     if (products.isEmpty) {
-                      return Center(
-                        child: Text('No products available yet.', style: AppTextStyles.bodySecondary),
+                      return const Center(
+                        child: const Text('No products available yet.', style: AppTextStyles.bodySecondary),
                       );
                     }
                     return ListView.separated(
@@ -207,7 +207,7 @@ class _NoPoolCard extends StatelessWidget {
         children: [
           Text('No active pool yet', style: AppTextStyles.title.copyWith(fontSize: 19)),
           const SizedBox(height: 6),
-          Text('Join a nearby pool to start saving on your groceries.', style: AppTextStyles.bodySecondary),
+          const Text('Join a nearby pool to start saving on your groceries.', style: AppTextStyles.bodySecondary),
           const SizedBox(height: 16),
           ElevatedButton(onPressed: onFindPool, child: const Text('Find a Pool')),
         ],
@@ -273,12 +273,12 @@ class _ActivePoolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('DISCOUNT', style: AppTextStyles.caption),
+                    const Text('DISCOUNT', style: AppTextStyles.caption),
                     const SizedBox(height: 4),
                     Text(
                       unlocked == null
-                          ? 'No discount yet'
-                          : '${pb.discountPercent.round()}% Off (${unlocked.label})',
+                          ? (pb.extraPercent > 0 ? '${pb.discountPercent.round()}% Off (supplier bonus)' : 'No discount yet')
+                          : '${pb.discountPercent.round()}% Off (${unlocked.label}${pb.extraPercent > 0 ? ' + bonus' : ''})',
                       style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary),
                     ),
                   ],
@@ -288,7 +288,7 @@ class _ActivePoolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('YOUR SAVINGS', style: AppTextStyles.caption),
+                    const Text('YOUR SAVINGS', style: AppTextStyles.caption),
                     const SizedBox(height: 4),
                     Text(formatTaka(savings),
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),

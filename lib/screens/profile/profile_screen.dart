@@ -3,15 +3,21 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/auth_mode.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/format.dart';
+import '../../models/order_model.dart';
+import '../../models/order_summary_model.dart';
 import '../../models/reliability_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/order_service.dart';
 import '../../services/reliability_service.dart';
 import '../../services/seed_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/stream_view.dart';
 import '../auth/login_screen.dart';
 import 'edit_profile_screen.dart';
+import 'report_problem_screen.dart';
+import 'terms_screen.dart';
 
 /// ASSUMPTION: Profile wasn't one of the 6 Figma screens — simple avatar,
 /// name, and account option list in the same visual language.
@@ -24,7 +30,27 @@ class ProfileScreen extends StatelessWidget {
     (icon: Icons.payment_rounded, label: 'Payment Methods'),
     (icon: Icons.notifications_outlined, label: 'Notifications'),
     (icon: Icons.settings_outlined, label: 'Settings'),
+    (icon: Icons.report_gmailerrorred_outlined, label: 'Report a Problem'),
+    (icon: Icons.description_outlined, label: 'Terms & Conditions'),
   ];
+
+  VoidCallback? _tapFor(BuildContext context, String label, UserModel user) {
+    switch (label) {
+      case 'Personal Information':
+        return () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)),
+            );
+      case 'Report a Problem':
+        return () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => ReportProblemScreen(user: user)),
+            );
+      case 'Terms & Conditions':
+        return () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TermsScreen()),
+            );
+    }
+    return null;
+  }
 
   Future<void> _loadDemoPools(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -58,16 +84,14 @@ class ProfileScreen extends StatelessWidget {
               Text(user.emailOrPhone, style: AppTextStyles.bodySecondary),
               const SizedBox(height: 20),
               _ReliabilityCard(uid: user.id),
+              const SizedBox(height: 12),
+              const _ImpactCard(),
               const SizedBox(height: 24),
               for (final option in _options)
                 _ProfileOptionTile(
                   icon: option.icon,
                   label: option.label,
-                  onTap: option.label == 'Personal Information'
-                      ? () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => EditProfileScreen(user: user)),
-                          )
-                      : null,
+                  onTap: _tapFor(context, option.label, user),
                 ),
               const SizedBox(height: 6),
               _ProfileOptionTile(
@@ -84,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 24),
-              Text('Developer tools', style: AppTextStyles.caption),
+              const Text('Developer tools', style: AppTextStyles.caption),
               const SizedBox(height: 8),
               _ProfileOptionTile(
                 icon: Icons.build_outlined,
@@ -218,7 +242,7 @@ class _ReliabilityCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Reliability score', style: AppTextStyles.caption),
+                        const Text('Reliability score', style: AppTextStyles.caption),
                         const SizedBox(height: 2),
                         Text(r.label,
                             style: AppTextStyles.body.copyWith(
@@ -279,6 +303,58 @@ class _RateRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Your impact": what the member saved by buying through pools.
+class _ImpactCard extends StatelessWidget {
+  const _ImpactCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamView<List<OrderSummary>>(
+      create: () => OrderService.instance.watchOrders(),
+      builder: (context, orders) {
+        final paid = orders.where((o) => o.status == PaymentStatus.paid).toList();
+        final saved = paid.fold<double>(0, (sum, o) => sum + o.saved);
+        final spent = paid.fold<double>(0, (sum, o) => sum + o.memberShare);
+        final percent = (saved + spent) > 0 ? (saved / (saved + spent) * 100).round() : 0;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.savings_outlined, color: AppColors.primary, size: 30),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Your impact', style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
+                    const SizedBox(height: 2),
+                    Text(
+                      paid.isEmpty ? 'Nothing yet' : 'Saved ${formatTaka(saved)}',
+                      style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary),
+                    ),
+                    Text(
+                      paid.isEmpty
+                          ? 'Your savings will show here after your first paid pool order.'
+                          : '$percent% less than retail across ${paid.length} pool ${paid.length == 1 ? 'order' : 'orders'}.',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

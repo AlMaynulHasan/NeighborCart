@@ -45,7 +45,7 @@ class PoolService {
         if (pool == null) return null;
         return PoolView(
           pool: pool,
-          priceBreak: PriceBreak.compute(tiers, pool.collectiveValue),
+          priceBreak: PriceBreak.compute(tiers, pool.collectiveValue, extraPercent: pool.supplierExtraPercent),
         );
       },
     );
@@ -57,7 +57,7 @@ class PoolService {
       PricingService.instance.watchTiers(),
       (pools, tiers) => [
         for (final p in pools)
-          PoolView(pool: p, priceBreak: PriceBreak.compute(tiers, p.collectiveValue)),
+          PoolView(pool: p, priceBreak: PriceBreak.compute(tiers, p.collectiveValue, extraPercent: p.supplierExtraPercent)),
       ],
     );
   }
@@ -67,6 +67,7 @@ class PoolService {
   Future<String> createPool({
     required String name,
     required String pickupLocation,
+    required String area,
     required DateTime deadline,
   }) async {
     final uid = AuthService.instance.currentUser!.uid;
@@ -80,6 +81,7 @@ class PoolService {
       tx.set(poolRef, {
         'name': name,
         'pickupLocation': pickupLocation,
+        'area': area,
         'deadline': Timestamp.fromDate(deadline),
         'coordinatorUid': uid,
         'coordinatorName': userName,

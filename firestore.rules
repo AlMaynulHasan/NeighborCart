@@ -52,6 +52,16 @@ service cloud.firestore {
         allow read, write: if isOwner(uid);
       }
 
+      // the basket paid for last time ("reorder last week")
+      match /lastBaskets/{poolId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // a wholesaler's own list of bids
+      match /bids/{poolId} {
+        allow read, write: if isOwner(uid);
+      }
+
       // Counters are written by a pool's coordinator when a cycle completes
       // (+1 cycle, +0/1 paid, +0/1 picked up) and are readable by anyone
       // signed in (shown next to members on the pickup screen).
@@ -93,8 +103,15 @@ service cloud.firestore {
       return resource.data.coordinatorUid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'status', 'orderedAt', 'readyAt', 'deadline', 'updatedAt',
-          'collectiveValue', 'demand', 'orderNumber', 'coordinatorUid', 'coordinatorName'
+          'collectiveValue', 'demand', 'orderNumber', 'coordinatorUid', 'coordinatorName',
+          'supplierUid', 'supplierName', 'supplierExtraPercent'
         ]);
+    }
+
+    // DEMO ONLY: adds the `area` field to older seeded pools.
+    function seedAreaUpdate() {
+      return resource.data.coordinatorUid.matches('seed_.*')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['area']);
     }
 
     // Joining: memberCount goes up by exactly one, in the same write that
@@ -129,7 +146,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && (validNewPool() || isSeed(request.resource.data.coordinatorUid));
       allow update: if signedIn()
-        && (coordinatorUpdate() || joinUpdate(poolId) || cartUpdate(poolId));
+        && (coordinatorUpdate() || joinUpdate(poolId) || cartUpdate(poolId) || seedAreaUpdate());
       allow delete: if false;
 
       match /pool_members/{uid} {
@@ -170,10 +187,41 @@ service cloud.firestore {
         allow write: if isCoordinator(poolId);
       }
 
+      // Wholesaler bids: a wholesaler (with a saved licence) offers an extra
+      // discount while the pool is open; members and wholesalers can read them.
+      match /bids/{wholesalerUid} {
+        allow read: if isMember(poolId) || isWholesaler();
+        allow create, update: if isWholesaler()
+          && wholesalerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['poolId', 'poolName', 'wholesalerUid', 'wholesalerName',
+                                                   'licenseNumber', 'extraPercent', 'note', 'createdAt'])
+          && request.resource.data.wholesalerUid == request.auth.uid
+          && request.resource.data.licenseNumber is string
+          && request.resource.data.licenseNumber.size() > 0
+          && request.resource.data.extraPercent is number
+          && request.resource.data.extraPercent >= 0
+          && request.resource.data.extraPercent <= 15
+          && poolDoc(poolId).data.status == 'open';
+        allow delete: if isOwner(wholesalerUid) || isCoordinator(poolId);
+      }
+
       match /cycles/{cycleId} {
         allow read: if isMember(poolId);
         allow write: if isCoordinator(poolId);
       }
+    }
+
+    // ---------------------------------------------------------------- reports
+    // "Report a problem": members file them, only the author can read theirs;
+    // the team reviews them in the Firebase console.
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000;
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     // --------------------------------------------------------------- products

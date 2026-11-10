@@ -73,7 +73,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
             final poolView = data.$1;
             final user = data.$2;
             if (poolView == null) {
-              return Center(child: Text('This pool no longer exists.', style: AppTextStyles.bodySecondary));
+              return const Center(child: const Text('This pool no longer exists.', style: AppTextStyles.bodySecondary));
             }
             final pool = poolView.pool;
             final pb = poolView.priceBreak;
@@ -96,7 +96,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('COLLECTIVE VALUE', style: AppTextStyles.caption),
+                              const Text('COLLECTIVE VALUE', style: AppTextStyles.caption),
                               const SizedBox(height: 6),
                               Text(formatTaka(pool.collectiveValue),
                                   style: AppTextStyles.body.copyWith(
@@ -110,7 +110,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('ACTIVE NEIGHBORS', style: AppTextStyles.caption),
+                              const Text('ACTIVE NEIGHBORS', style: AppTextStyles.caption),
                               const SizedBox(height: 6),
                               Text('${pool.memberCount} Joined',
                                   style: AppTextStyles.body.copyWith(fontSize: 18, fontWeight: FontWeight.w800)),
@@ -136,7 +136,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Pool Coordinator', style: AppTextStyles.caption),
+                              const Text('Pool Coordinator', style: AppTextStyles.caption),
                               const SizedBox(height: 2),
                               Text(pool.coordinatorUid == user.id ? '${pool.coordinatorName} (You)' : pool.coordinatorName,
                                   style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
@@ -162,7 +162,7 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Tier Unlocks', style: AppTextStyles.title),
+                        const Text('Tier Unlocks', style: AppTextStyles.title),
                         const SizedBox(height: 8),
                         for (final tier in pb.tiers)
                           TierRow(
@@ -216,6 +216,27 @@ class _PoolDetailsScreenState extends State<PoolDetailsScreen> {
                       ),
                     ],
                   ),
+                  if (pool.hasSupplier) ...[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        const Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Supplier', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+                              Text(
+                                '${pool.supplierName} • +${pool.supplierExtraPercent.toStringAsFixed(pool.supplierExtraPercent % 1 == 0 ? 0 : 1)}% extra discount',
+                                style: AppTextStyles.bodySecondary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (isMember) ...[
                     const SizedBox(height: 20),
                     _PickupEntryCard(

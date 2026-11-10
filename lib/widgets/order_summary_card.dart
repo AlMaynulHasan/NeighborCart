@@ -48,7 +48,12 @@ class OrderSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            Text(_formatDate(order.date), style: AppTextStyles.caption),
+            Text(
+              order.txnId == null
+                  ? _formatDate(order.date)
+                  : '${_formatDate(order.date)} • ${order.paymentMethod ?? 'Paid'} • ${order.txnId}',
+              style: AppTextStyles.caption,
+            ),
             const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -56,7 +61,7 @@ class OrderSummaryCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Your Share', style: AppTextStyles.caption),
+                    const Text('Your Share', style: AppTextStyles.caption),
                     const SizedBox(height: 2),
                     Text('৳${order.memberShare.toStringAsFixed(0)}',
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary)),

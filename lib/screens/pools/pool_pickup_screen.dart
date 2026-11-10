@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/bid_model.dart';
+import '../../models/pool_model.dart';
 import '../../models/reliability_model.dart';
+import '../../services/bid_service.dart';
 import '../../services/pickup_service.dart';
 import '../../services/reliability_service.dart';
 import '../../widgets/stream_view.dart';
@@ -93,7 +96,7 @@ class _PoolPickupScreenState extends State<PoolPickupScreen> {
           builder: (context, data) {
             final pool = data.pool;
             if (pool == null) {
-              return Center(child: Text('This pool no longer exists.', style: AppTextStyles.bodySecondary));
+              return const Center(child: const Text('This pool no longer exists.', style: AppTextStyles.bodySecondary));
             }
             final me = data.members.where((m) => m.isMe).toList();
             final next = data.nextCoordinator;
@@ -131,11 +134,13 @@ class _PoolPickupScreenState extends State<PoolPickupScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (data.iAmCoordinator) _coordinatorCard(data) else _memberNote(data, me.isEmpty ? null : me.first),
+                const SizedBox(height: 16),
+                _SupplierCard(pool: pool, isCoordinator: data.iAmCoordinator),
                 const SizedBox(height: 22),
-                Text('Members', style: AppTextStyles.title),
+                const Text('Members', style: AppTextStyles.title),
                 const SizedBox(height: 10),
                 if (data.members.isEmpty)
-                  Text('No members yet.', style: AppTextStyles.bodySecondary)
+                  const Text('No members yet.', style: AppTextStyles.bodySecondary)
                 else
                   for (final m in data.members)
                     _MemberRow(
@@ -358,7 +363,7 @@ class _MemberRow extends StatelessWidget {
                   children: [
                     if (member.isCoordinator) ...[
                       Text('Coordinator', style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
-                      Text('  •  ', style: AppTextStyles.caption),
+                      const Text('  •  ', style: AppTextStyles.caption),
                     ],
                     Text(
                       member.paid ? 'Paid' : 'Not paid',
@@ -367,7 +372,7 @@ class _MemberRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Text('  •  ', style: AppTextStyles.caption),
+                    const Text('  •  ', style: AppTextStyles.caption),
                     _ScoreText(uid: member.uid),
                   ],
                 ),
@@ -378,7 +383,7 @@ class _MemberRow extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Picked up', style: AppTextStyles.caption),
+                const Text('Picked up', style: AppTextStyles.caption),
                 Checkbox(
                   value: member.pickedUp,
                   activeColor: AppColors.primary,
@@ -410,9 +415,9 @@ class _ScoreText extends StatelessWidget {
       future: ReliabilityService.instance.getScore(uid),
       builder: (context, snapshot) {
         final r = snapshot.data;
-        if (r == null) return Text('...', style: AppTextStyles.caption);
+        if (r == null) return const Text('...', style: AppTextStyles.caption);
         final score = r.score;
-        if (score == null) return Text('New member', style: AppTextStyles.caption);
+        if (score == null) return const Text('New member', style: AppTextStyles.caption);
         return Text(
           'Score $score',
           style: AppTextStyles.caption.copyWith(
@@ -421,6 +426,107 @@ class _ScoreText extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Supplier chosen for the pool + the wholesalers' bids. Only the coordinator
+/// can choose, and only while the pool is open.
+class _SupplierCard extends StatelessWidget {
+  final PoolModel pool;
+  final bool isCoordinator;
+  const _SupplierCard({required this.pool, required this.isCoordinator});
+
+  String _pct(double v) => v.toStringAsFixed(v % 1 == 0 ? 0 : 1);
+
+  Future<void> _run(BuildContext context, Future<void> Function() action, String done) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await action();
+      messenger.showSnackBar(SnackBar(content: Text(done)));
+    } on NotCoordinatorException {
+      messenger.showSnackBar(const SnackBar(content: Text('Only the pool coordinator can do this.')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Something went wrong. Please try again.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canChoose = isCoordinator && pool.status == 'open';
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Supplier', style: AppTextStyles.title),
+          const SizedBox(height: 6),
+          if (pool.hasSupplier)
+            Row(
+              children: [
+                Expanded(
+                  child: Text('${pool.supplierName} • +${_pct(pool.supplierExtraPercent)}% extra discount',
+                      style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary)),
+                ),
+                if (canChoose)
+                  TextButton(
+                    onPressed: () => _run(context, () => BidService.instance.clearSupplier(pool.id), 'Supplier removed.'),
+                    child: const Text('Remove'),
+                  ),
+              ],
+            )
+          else
+            const Text('No supplier chosen yet.', style: AppTextStyles.bodySecondary),
+          const SizedBox(height: 12),
+          Text('Wholesaler bids', style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          StreamView<List<BidModel>>(
+            create: () => BidService.instance.watchPoolBids(pool.id),
+            builder: (context, bids) {
+              if (bids.isEmpty) {
+                return const Text(
+                  'No bids yet. Wholesalers can bid from their Community Demand screen.',
+                  style: AppTextStyles.caption,
+                );
+              }
+              return Column(
+                children: [
+                  for (final bid in bids)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(bid.wholesalerName, style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
+                                Text('+${_pct(bid.extraPercent)}% extra • Licence ${bid.licenseNumber}',
+                                    style: AppTextStyles.caption),
+                                if (bid.note.isNotEmpty) Text(bid.note, style: AppTextStyles.caption),
+                              ],
+                            ),
+                          ),
+                          if (pool.supplierUid == bid.wholesalerUid)
+                            Text('Chosen ✓',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800))
+                          else if (canChoose)
+                            TextButton(
+                              onPressed: () => _run(
+                                context,
+                                () => BidService.instance.chooseSupplier(pool.id, bid),
+                                '${bid.wholesalerName} chosen as supplier.',
+                              ),
+                              child: const Text('Choose'),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -76,7 +76,7 @@ class PricingManagementScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text('Wholesale pricing tiers used across all active pools.', style: AppTextStyles.bodySecondary),
+              const Text('Wholesale pricing tiers used across all active pools.', style: AppTextStyles.bodySecondary),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView(
@@ -163,7 +163,7 @@ class _EditTierSheetState extends State<_EditTierSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Edit Tier', style: AppTextStyles.title),
+          const Text('Edit Tier', style: AppTextStyles.title),
           const SizedBox(height: 18),
           CustomTextField(label: 'Tier Label', controller: _labelController),
           const SizedBox(height: 16),
@@ -183,7 +183,7 @@ class _EditTierSheetState extends State<_EditTierSheet> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Active', style: TextStyle(fontWeight: FontWeight.w700)),
             value: _isActive,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (v) => setState(() => _isActive = v),
           ),
           if (_error != null) ...[

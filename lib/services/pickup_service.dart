@@ -212,6 +212,7 @@ class PickupService {
           'paid': FieldValue.increment(m.paid ? 1 : 0),
           'pickedUp': FieldValue.increment(m.pickedUp ? 1 : 0),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastPoolId': pool.id,
         },
         SetOptions(merge: true),
       );

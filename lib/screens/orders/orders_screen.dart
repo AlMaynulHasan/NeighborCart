@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../models/order_model.dart';
 import '../../models/order_summary_model.dart';
 import '../../services/order_service.dart';
 import '../../widgets/order_summary_card.dart';
 import '../../widgets/stream_view.dart';
+import '../settlement/receipt_screen.dart';
 import '../settlement/settlement_screen.dart';
 
 /// ASSUMPTION: Orders wasn't one of the 6 Figma screens — a simple list in
@@ -25,8 +27,8 @@ class OrdersScreen extends StatelessWidget {
               create: () => OrderService.instance.watchOrders(),
               builder: (context, orders) {
                 if (orders.isEmpty) {
-                  return Center(
-                    child: Text(
+                  return const Center(
+                    child: const Text(
                       'No orders yet. Add items to your cart and\ntap "Proceed to Split details".',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodySecondary,
@@ -41,7 +43,11 @@ class OrdersScreen extends StatelessWidget {
                     return OrderSummaryCard(
                       order: order,
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SettlementScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => (order.status == PaymentStatus.paid && order.txnId != null)
+                              ? ReceiptScreen(data: ReceiptData.fromOrder(order))
+                              : const SettlementScreen(),
+                        ),
                       ),
                     );
                   },

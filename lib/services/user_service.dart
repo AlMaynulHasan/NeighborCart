@@ -48,10 +48,11 @@ class UserService {
   Future<void> updateWholesalerProfile({
     required String businessName,
     required String contactName,
+    required String licenseNumber,
   }) {
     final uid = AuthService.instance.currentUser!.uid;
     return _db.collection('users').doc(uid).set(
-      {'businessName': businessName, 'contactName': contactName},
+      {'businessName': businessName, 'contactName': contactName, 'licenseNumber': licenseNumber},
       SetOptions(merge: true),
     );
   }

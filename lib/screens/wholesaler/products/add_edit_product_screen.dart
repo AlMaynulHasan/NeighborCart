@@ -132,9 +132,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     border: Border.all(color: AppColors.border),
                   ),
                   alignment: Alignment.center,
-                  child: Column(
+                  child: const Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.add_a_photo_outlined, color: AppColors.primary, size: 28),
                       SizedBox(height: 6),
                       Text('Product image (coming soon)', style: AppTextStyles.caption),
@@ -212,7 +212,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     title: const Text('Active', style: TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: const Text('Visible to customer pools', style: AppTextStyles.caption),
                     value: _isActive,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (v) => setState(() => _isActive = v),
                   ),
                 ),

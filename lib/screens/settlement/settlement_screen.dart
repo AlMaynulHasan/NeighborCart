@@ -5,6 +5,8 @@ import '../../core/utils/format.dart';
 import '../../services/settlement_service.dart';
 import '../../widgets/member_payment_card.dart';
 import '../../widgets/stream_view.dart';
+import 'payment_sheet.dart';
+import 'receipt_screen.dart';
 
 /// Matches Figma screen 6 ("Settlement").
 class SettlementScreen extends StatefulWidget {
@@ -18,11 +20,29 @@ class _SettlementScreenState extends State<SettlementScreen> {
   bool _isPaying = false;
 
   Future<void> _pay(SettlementData data) async {
+    final details = await showPaymentSheet(context, data.myShare);
+    if (details == null || !mounted) return;
     setState(() => _isPaying = true);
     final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     try {
-      await SettlementService.instance.payShare(data);
-      messenger.showSnackBar(const SnackBar(content: Text('Payment recorded. Thank you!')));
+      await SettlementService.instance.payShare(data, details);
+      final pv = data.poolView!;
+      final discount = pv.priceBreak.discountPercent;
+      navigator.push(MaterialPageRoute(
+        builder: (_) => ReceiptScreen(
+          data: ReceiptData(
+            poolName: pv.pool.name,
+            orderLabel: '#${pv.pool.orderNumber}',
+            amount: data.myShare,
+            retail: discount < 100 ? data.myShare / (1 - discount / 100) : null,
+            method: details.method,
+            phoneLast4: details.phoneLast4,
+            txnId: details.txnId,
+            paidAt: DateTime.now(),
+          ),
+        ),
+      ));
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Payment failed. Please try again.')));
     } finally {
@@ -41,8 +61,8 @@ class _SettlementScreenState extends State<SettlementScreen> {
           builder: (context, data) {
             final poolView = data.poolView;
             if (poolView == null) {
-              return Center(
-                child: Text('Join a pool to see its settlement.', style: AppTextStyles.bodySecondary),
+              return const Center(
+                child: const Text('Join a pool to see its settlement.', style: AppTextStyles.bodySecondary),
               );
             }
             final pool = poolView.pool;
@@ -83,7 +103,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('TOTAL POOL ORDER', style: AppTextStyles.caption),
+                                  const Text('TOTAL POOL ORDER', style: AppTextStyles.caption),
                                   const SizedBox(height: 6),
                                   Text(formatTaka(data.totalAmount),
                                       style: AppTextStyles.body.copyWith(fontSize: 20, fontWeight: FontWeight.w800)),
@@ -108,7 +128,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Neighbor payment progress', style: AppTextStyles.bodySecondary),
+                            const Text('Neighbor payment progress', style: AppTextStyles.bodySecondary),
                             Text('${data.paidCount} of ${data.members.length} paid',
                                 style: AppTextStyles.body
                                     .copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
@@ -128,7 +148,7 @@ class _SettlementScreenState extends State<SettlementScreen> {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  Text('Member Breakdown', style: AppTextStyles.title),
+                  const Text('Member Breakdown', style: AppTextStyles.title),
                   const SizedBox(height: 12),
                   Expanded(
                     child: ListView(

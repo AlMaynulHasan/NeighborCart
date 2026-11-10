@@ -183,4 +183,40 @@ class CartService {
       });
     });
   }
+
+  DocumentReference<Map<String, dynamic>> _lastBasketRef(String poolId) {
+    final uid = AuthService.instance.currentUser!.uid;
+    return _db.collection('users').doc(uid).collection('lastBaskets').doc(poolId);
+  }
+
+  /// How many items were in the basket this member paid for last time.
+  Future<int> lastBasketCount(String poolId) async {
+    final snap = await _lastBasketRef(poolId).get();
+    return ((snap.data()?['items'] as List<dynamic>?) ?? const []).length;
+  }
+
+  /// Re-adds last week's paid basket at today's prices. Returns
+  /// (items added, items skipped because they are no longer available).
+  Future<(int, int)> reorderLastBasket(String poolId) async {
+    final snap = await _lastBasketRef(poolId).get();
+    final items = ((snap.data()?['items'] as List<dynamic>?) ?? const [])
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+    var added = 0;
+    var skipped = 0;
+    for (final item in items) {
+      final productSnap = await _db.collection('products').doc(item['productId'] as String).get();
+      if (!productSnap.exists || productSnap.data()?['isActive'] != true) {
+        skipped++;
+        continue;
+      }
+      await changeQuantity(
+        poolId: poolId,
+        product: ProductModel.fromDoc(productSnap),
+        delta: (item['quantity'] as num).toInt(),
+      );
+      added++;
+    }
+    return (added, skipped);
+  }
 }

@@ -26,6 +26,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       TextEditingController(text: widget.user.businessName ?? '');
   late final TextEditingController _contactController =
       TextEditingController(text: widget.user.contactName ?? '');
+  late final TextEditingController _licenseController =
+      TextEditingController(text: widget.user.licenseNumber ?? '');
   bool _isSaving = false;
 
   bool get _isWholesaler => widget.user.role == AuthMode.wholesaler;
@@ -35,6 +37,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _businessController.dispose();
     _contactController.dispose();
+    _licenseController.dispose();
     super.dispose();
   }
 
@@ -50,6 +53,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await UserService.instance.updateWholesalerProfile(
           businessName: _businessController.text.trim(),
           contactName: _contactController.text.trim(),
+          licenseNumber: _licenseController.text.trim(),
         );
       } else {
         await UserService.instance.updateCustomerName(_nameController.text.trim());
@@ -91,6 +95,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CustomTextField(label: 'Business Name', controller: _businessController, validator: _required),
                   const SizedBox(height: 16),
                   CustomTextField(label: 'Contact Person', controller: _contactController, validator: _required),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: 'Trade / Food Licence No.',
+                    hint: 'Needed to bid on pools',
+                    controller: _licenseController,
+                  ),
                 ] else
                   CustomTextField(label: 'Full Name', controller: _nameController, validator: _required),
                 const SizedBox(height: 16),
@@ -99,7 +109,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.border.withOpacity(0.4),
+                    color: AppColors.border.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(widget.user.emailOrPhone, style: AppTextStyles.bodySecondary),

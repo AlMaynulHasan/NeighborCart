@@ -48,6 +48,7 @@ class AuthService {
       'role': role.name,
       'email': email,
       'createdAt': FieldValue.serverTimestamp(),
+      'termsAcceptedAt': FieldValue.serverTimestamp(),
       ...profile,
     });
     return user;

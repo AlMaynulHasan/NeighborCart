@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/utils/stream_utils.dart';
 import '../models/order_model.dart';
+import '../models/payment_model.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
 import 'pool_service.dart';
@@ -101,16 +102,24 @@ class SettlementService {
     );
   }
 
-  /// Records the member's payment (no real gateway yet — marks as paid).
-  Future<void> payShare(SettlementData data) async {
+  /// Records the member's (simulated) payment, keeps a copy of the paid basket
+  /// for "reorder last week", and writes the order record with its receipt data.
+  Future<void> payShare(SettlementData data, PaymentDetails details) async {
     final pv = data.poolView;
     if (pv == null) return;
     final uid = AuthService.instance.currentUser!.uid;
     final poolRef = _db.collection('pools').doc(pv.pool.id);
+    final cartSnap = await poolRef.collection('carts').doc(uid).get();
+    final items = (cartSnap.data()?['items'] as List<dynamic>?) ?? const [];
+    final retail = (cartSnap.data()?['subtotal'] as num?)?.toDouble() ?? data.myShare;
+
     final batch = _db.batch();
     batch.set(poolRef.collection('payments').doc(uid), {
       'uid': uid,
       'amount': data.myShare,
+      'method': details.method,
+      'phoneLast4': details.phoneLast4,
+      'txnId': details.txnId,
       'paidAt': FieldValue.serverTimestamp(),
     });
     batch.set(_db.collection('users').doc(uid).collection('orders').doc(pv.pool.id), {
@@ -118,9 +127,18 @@ class SettlementService {
       'poolName': pv.pool.name,
       'orderNumber': pv.pool.orderNumber,
       'amount': data.myShare,
+      'retail': retail,
       'poolTotal': data.totalAmount,
       'status': 'paid',
+      'method': details.method,
+      'phoneLast4': details.phoneLast4,
+      'txnId': details.txnId,
       'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(_db.collection('users').doc(uid).collection('lastBaskets').doc(pv.pool.id), {
+      'poolName': pv.pool.name,
+      'items': items,
+      'savedAt': FieldValue.serverTimestamp(),
     });
     await batch.commit();
   }

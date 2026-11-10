@@ -9,6 +9,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/auth_mode_toggle.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../profile/terms_screen.dart';
 import '../wholesaler/dashboard/wholesaler_dashboard_screen.dart';
 
 /// ASSUMPTION: no Figma design was provided for Sign Up — it's only
@@ -35,6 +36,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isSubmitting = false;
+  bool _acceptedTerms = false;
   late AuthMode _mode;
 
   bool get _isWholesaler => _mode == AuthMode.wholesaler;
@@ -66,6 +68,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the group-order terms to continue.')),
+      );
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       final profile = _isWholesaler
@@ -150,7 +158,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: AppTextStyles.heading1.copyWith(color: AppColors.primary, fontSize: 26),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   AppConstants.appTagline,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.subtitle,
@@ -220,6 +228,33 @@ class _SignupScreenState extends State<SignupScreen> {
                     onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   ),
                 ),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _acceptedTerms,
+                      activeColor: AppColors.primary,
+                      onChanged: (v) => setState(() => _acceptedTerms = v ?? false),
+                    ),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: AppTextStyles.caption,
+                          children: [
+                            const TextSpan(text: 'I agree to the '),
+                            TextSpan(
+                              text: 'group-order terms',
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const TermsScreen()),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 26),
                 CustomButton(
                   label: _isWholesaler ? 'Create Business Account' : 'Sign Up',
@@ -228,8 +263,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 if (!_isWholesaler) ...[
                   const SizedBox(height: 24),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Expanded(child: Divider()),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),

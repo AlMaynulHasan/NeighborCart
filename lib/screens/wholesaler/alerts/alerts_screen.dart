@@ -29,7 +29,7 @@ class AlertsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               children: [
                 if (lowStock.isNotEmpty) ...[
-                  Text('Low Stock', style: AppTextStyles.title),
+                  const Text('Low Stock', style: AppTextStyles.title),
                   const SizedBox(height: 10),
                   for (final product in lowStock)
                     AlertTile(
@@ -40,7 +40,7 @@ class AlertsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
                 if (notReached.isNotEmpty) ...[
-                  Text('MOQ Not Reached', style: AppTextStyles.title),
+                  const Text('MOQ Not Reached', style: AppTextStyles.title),
                   const SizedBox(height: 10),
                   for (final order in notReached)
                     AlertTile(
@@ -51,7 +51,7 @@ class AlertsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
                 if (reached.isNotEmpty) ...[
-                  Text('MOQ Reached', style: AppTextStyles.title),
+                  const Text('MOQ Reached', style: AppTextStyles.title),
                   const SizedBox(height: 10),
                   for (final order in reached)
                     AlertTile(
@@ -63,7 +63,7 @@ class AlertsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
                 if (topRequested.isNotEmpty) ...[
-                  Text('High-Demand Products', style: AppTextStyles.title),
+                  const Text('High-Demand Products', style: AppTextStyles.title),
                   const SizedBox(height: 10),
                   for (final name in topRequested)
                     AlertTile(
@@ -74,7 +74,7 @@ class AlertsScreen extends StatelessWidget {
                     ),
                   const SizedBox(height: 20),
                 ],
-                Text('Pending Orders', style: AppTextStyles.title),
+                const Text('Pending Orders', style: AppTextStyles.title),
                 const SizedBox(height: 10),
                 AlertTile(
                   icon: Icons.hourglass_top_rounded,

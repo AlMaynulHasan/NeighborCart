@@ -22,7 +22,7 @@ class AllProductsScreen extends StatelessWidget {
           create: () => ProductService.instance.watchActiveProducts(),
           builder: (context, products) {
             if (products.isEmpty) {
-              return Center(child: Text('No products available yet.', style: AppTextStyles.bodySecondary));
+              return const Center(child: Text('No products available yet.', style: AppTextStyles.bodySecondary));
             }
             return ListView.separated(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),

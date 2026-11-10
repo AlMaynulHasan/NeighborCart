@@ -39,8 +39,8 @@ class WeeklyCartScreen extends StatelessWidget {
               const SizedBox(height: 14),
               Expanded(
                 child: poolView == null
-                    ? Center(
-                        child: Text(
+                    ? const Center(
+                        child: const Text(
                           'Join a pool from the Pools tab to start shopping.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodySecondary,
@@ -51,7 +51,7 @@ class WeeklyCartScreen extends StatelessWidget {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('Your cart is empty.', style: AppTextStyles.bodySecondary),
+                                const Text('Your cart is empty.', style: AppTextStyles.bodySecondary),
                                 const SizedBox(height: 12),
                                 ElevatedButton(
                                   onPressed: () => Navigator.of(context).push(
@@ -68,6 +68,7 @@ class WeeklyCartScreen extends StatelessWidget {
                                   style: OutlinedButton.styleFrom(minimumSize: const Size(180, 46)),
                                   child: const Text('Get basket suggestions'),
                                 ),
+                                _ReorderButton(poolId: poolView.pool.id),
                               ],
                             ),
                           )
@@ -231,7 +232,7 @@ class _CartSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Shared Cart Total', style: AppTextStyles.body),
+              const Text('Shared Cart Total', style: AppTextStyles.body),
               Text(formatTaka(poolView.pool.collectiveValue),
                   style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
             ],
@@ -258,9 +259,9 @@ class _CartSummaryCard extends StatelessWidget {
               else
                 Text('Retail Price: ${formatTaka(cart.subtotal)}', style: AppTextStyles.caption),
               if (unlocked)
-                Row(
+                const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text('Wholesale Unlocked',
                         style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 12)),
                     SizedBox(width: 4),
@@ -352,7 +353,7 @@ class _SuggestionsEntry extends StatelessWidget {
                   children: [
                     Text('Smart basket suggestions',
                         style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary)),
-                    Text('How much your household needs, based on shelf life.', style: AppTextStyles.caption),
+                    const Text('How much your household needs, based on shelf life.', style: AppTextStyles.caption),
                   ],
                 ),
               ),
@@ -361,6 +362,61 @@ class _SuggestionsEntry extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Reorder last week's basket" — shown on an empty cart when the member has
+/// a previously paid basket for this pool.
+class _ReorderButton extends StatefulWidget {
+  final String poolId;
+  const _ReorderButton({required this.poolId});
+
+  @override
+  State<_ReorderButton> createState() => _ReorderButtonState();
+}
+
+class _ReorderButtonState extends State<_ReorderButton> {
+  late final Future<int> _count = CartService.instance.lastBasketCount(widget.poolId);
+  bool _busy = false;
+
+  Future<void> _reorder() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      final (added, skipped) = await CartService.instance.reorderLastBasket(widget.poolId);
+      messenger.showSnackBar(SnackBar(
+        content: Text(skipped == 0
+            ? 'Added $added items from your last basket.'
+            : 'Added $added items; $skipped are no longer available.'),
+      ));
+    } on PoolClosedException {
+      messenger.showSnackBar(const SnackBar(content: Text('Ordering is closed for this pool.')));
+    } on AlreadyPaidException {
+      messenger.showSnackBar(const SnackBar(content: Text('You have already paid for this order.')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not reorder. Please try again.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<int>(
+      future: _count,
+      builder: (context, snapshot) {
+        final n = snapshot.data ?? 0;
+        if (n == 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: OutlinedButton(
+            onPressed: _busy ? null : _reorder,
+            style: OutlinedButton.styleFrom(minimumSize: const Size(180, 46)),
+            child: Text("Reorder last week's basket ($n items)"),
+          ),
+        );
+      },
     );
   }
 }

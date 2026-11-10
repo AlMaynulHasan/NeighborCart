@@ -93,7 +93,14 @@ class SeedService {
 
     Future<bool> createPool(String id, Map<String, dynamic> data) async {
       final ref = _db.collection('pools').doc(id);
-      if ((await ref.get()).exists) return false;
+      final existing = await ref.get();
+      if (existing.exists) {
+        // Older demo pools: add the area so they show up in community demand.
+        if (existing.data()?['area'] == null && data['area'] != null) {
+          await ref.update({'area': data['area']});
+        }
+        return false;
+      }
       await ref.set({...data, 'createdAt': FieldValue.serverTimestamp()});
       return true;
     }
@@ -128,6 +135,7 @@ class SeedService {
 
     if (await createPool('pool_saidpur_c', {
       'name': 'Saidpur Block-C Pool',
+      'area': 'Saidpur',
       'pickupLocation': 'Saidpur Community Center, Gate 2',
       'deadline': Timestamp.fromDate(_nextWeekday(DateTime.thursday, 20)),
       'coordinatorName': 'Zahid Hasan',
@@ -159,6 +167,7 @@ class SeedService {
 
     if (await createPool('pool_nilphamari', {
       'name': 'Nilphamari Road Pool',
+      'area': 'Saidpur',
       'pickupLocation': 'Saidpur Govt College Gate',
       'deadline': Timestamp.fromDate(_nextWeekday(DateTime.thursday, 20)),
       'coordinatorName': 'Rafiq Hossain',
@@ -174,6 +183,7 @@ class SeedService {
 
     if (await createPool('pool_university', {
       'name': 'University Quarter Pool',
+      'area': 'University Area',
       'pickupLocation': 'Unicourt Community Gate 1',
       'deadline': Timestamp.fromDate(_nextWeekday(DateTime.wednesday, 18)),
       'coordinatorName': 'Nusrat Jahan',
@@ -189,6 +199,7 @@ class SeedService {
 
     if (await createPool('pool_east_saidpur', {
       'name': 'East Saidpur Block-A Pool',
+      'area': 'Saidpur',
       'pickupLocation': 'Al-Falah Jame Mosque Complex',
       'deadline': Timestamp.fromDate(_nextWeekday(DateTime.friday, 16)),
       'coordinatorName': 'Imran Khan',

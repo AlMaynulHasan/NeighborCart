@@ -11,6 +11,10 @@ class OrderSummary {
   final double totalAmount;
   final double memberShare;
   final PaymentStatus status;
+  final double? retailAmount; // what it would have cost without wholesale pricing
+  final String? paymentMethod;
+  final String? phoneLast4;
+  final String? txnId;
 
   const OrderSummary({
     required this.id,
@@ -20,7 +24,17 @@ class OrderSummary {
     required this.totalAmount,
     required this.memberShare,
     required this.status,
+    this.retailAmount,
+    this.paymentMethod,
+    this.phoneLast4,
+    this.txnId,
   });
+
+  double get saved {
+    final retail = retailAmount;
+    if (status != PaymentStatus.paid || retail == null || retail <= memberShare) return 0;
+    return retail - memberShare;
+  }
 
   factory OrderSummary.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final d = doc.data() ?? <String, dynamic>{};
@@ -32,6 +46,10 @@ class OrderSummary {
       totalAmount: (d['poolTotal'] as num?)?.toDouble() ?? 0,
       memberShare: (d['amount'] as num?)?.toDouble() ?? 0,
       status: d['status'] == 'paid' ? PaymentStatus.paid : PaymentStatus.pending,
+      retailAmount: (d['retail'] as num?)?.toDouble(),
+      paymentMethod: d['method'] as String?,
+      phoneLast4: d['phoneLast4'] as String?,
+      txnId: d['txnId'] as String?,
     );
   }
 }

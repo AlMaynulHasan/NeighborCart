@@ -57,6 +57,12 @@ class WholesalerProfileScreen extends StatelessWidget {
               const SizedBox(height: 4),
               if (user.contactName != null) Text(user.contactName!, style: AppTextStyles.bodySecondary),
               Text(user.emailOrPhone, style: AppTextStyles.bodySecondary),
+              Text(
+                (user.licenseNumber == null || user.licenseNumber!.isEmpty)
+                    ? 'Licence: not added yet (needed to bid on pools)'
+                    : 'Licence: ${user.licenseNumber}',
+                style: AppTextStyles.caption,
+              ),
               const SizedBox(height: 28),
               for (final option in _options)
                 _OptionTile(
@@ -83,7 +89,7 @@ class WholesalerProfileScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 24),
-              Text('Developer tools', style: AppTextStyles.caption),
+              const Text('Developer tools', style: AppTextStyles.caption),
               const SizedBox(height: 8),
               _OptionTile(
                 icon: Icons.build_outlined,
